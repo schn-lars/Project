@@ -1,34 +1,19 @@
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "errno.h"
+#include "davis.h"
 
 /*
  * This is the main access point for our custom shell.
  */
 
-#define MAX_INPUT_BUFFER    128 // Including zero byte at the end
-#define MAX_COMMAND_LENGTH  10
-#define MAX_INPUT_COUNT     8
-
-char input[MAX_INPUT_BUFFER];
-char command[MAX_COMMAND_LENGTH];
-pid_t pid; // Process number
-char *arguments[8];
-int input_length;
-int shell_running;
-
-/*
- * Declaring functions for our shell.
- */
-void davis();
-void get_input();
-void parse_input_into_commands();
-void exec_command();
-
-
 int main()
 {
+    printf("░▒▓███████▓▒░   ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓███████▓▒░ \n");
+    printf("░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░        \n");
+    printf("░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒▒▓█▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░        \n");
+    printf("░▒▓█▓▒░░▒▓█▓▒░ ░▒▓████████▓▒░  ░▒▓█▓▒▒▓█▓▒░  ░▒▓█▓▒░  ░▒▓██████▓▒░  \n");
+    printf("░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░   ░▒▓█▓▓█▓▒░   ░▒▓█▓▒░        ░▒▓█▓▒░ \n");
+    printf("░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░   ░▒▓█▓▓█▓▒░   ░▒▓█▓▒░        ░▒▓█▓▒░ \n");
+    printf("░▒▓███████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░    ░▒▓██▓▒░    ░▒▓█▓▒░ ░▒▓███████▓▒░  \n");
+    printf("\n");
     // Opening shell.
     davis();
 
@@ -80,14 +65,13 @@ void parse_input_into_commands() {
 
 /*
  * Executes the command, previously saved in command originating from input.
+ * Commands can be added by elif-statements.
  */
 void exec_command() {
-    printf("Command: %s\n", command);
-
     if (strcmp(command, "quit") == 0) {
         shell_running = 0;
     } else {
-        printf("Unknown command: %s\n", command);
+        notify("Unknown command.");
     }
 
     // Set arguments and command to null after usage.
@@ -95,4 +79,12 @@ void exec_command() {
     for (int i = 0; i < MAX_INPUT_COUNT; i++) {
         arguments[i] = NULL;
     }
+}
+
+/*
+ * Used to send messages to the client's interface.
+ */
+void notify(char *message)
+{
+    printf("[DAVIS] %s\n", message);
 }
