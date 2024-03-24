@@ -4,6 +4,12 @@
  * This is the main access point for our custom shell.
  */
 
+char input[MAX_INPUT_BUFFER];
+char command[MAX_COMMAND_LENGTH];
+char *arguments[8];
+int input_length;
+int shell_running = 1;
+
 int main()
 {
     printf("░▒▓███████▓▒░   ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓███████▓▒░ \n");
@@ -69,7 +75,9 @@ void parse_input_into_commands() {
  */
 void exec_command() {
     if (strcmp(command, "quit") == 0) {
-        shell_running = 0;
+        quit();
+    } else if (strcmp(command, "ls") == 0) {
+        ls(1,".");
     } else {
         notify("Unknown command.");
     }

@@ -1,4 +1,4 @@
 all:
-	gcc davis.c commands/exit.c -o davis.o
+	gcc davis.c commands/quit.c commands/ls.c
 clear:
-	rm *.o
+	rm *.out

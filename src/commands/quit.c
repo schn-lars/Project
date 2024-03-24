@@ -1,9 +1,9 @@
 /*
  * This file executes the exit command.
  */
-#include "exit.h"
+#include "quit.h"
 
-void exit()
+void quit()
 {
     notify("Have a nice day.");
     shell_running = 0;
