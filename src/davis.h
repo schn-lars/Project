@@ -17,5 +17,7 @@ void get_input();
 void parse_input_into_commands();
 void exec_command();
 void notify(char *message);
+void warn(char *warning);
+int cast_flag_into_int(char *flag);
 
 #endif

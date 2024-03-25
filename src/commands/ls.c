@@ -1,21 +1,28 @@
 #include "ls.h"
 
-void ls(int flag_a, char *path)
+void ls(int flag, char *path) // l = 1, a = 2, al = 3
 {
-    if (flag_a == 1) { // Retrieves every single file (including . and ..)
-        struct dirent *dirent;
-        DIR *directory_content = opendir(path);
-        if (!directory_content) {
-            if (errno == ENOENT) {
-                notify("Directory cannot be reached.");
-            }
-            exit(EXIT_FAILURE);
+    struct dirent *directory_entry;
+    DIR *directory_content = opendir(path);
+    if (!directory_content) {
+        if (errno == ENOENT) {
+            warn("Directory cannot be reached.");
         }
-        while (readdir(directory_content) != NULL && !strcmp(dirent->d_name, ".") && !strcmp(dirent->d_name, "..")) {
-            printf("%s", dirent->d_name);
-        }
-        notify("LS");
-    } else {
-
+        exit(EXIT_FAILURE);
     }
+    if ((directory_entry = readdir(directory_content)) == NULL) {
+        notify("Your current directory is empty.");
+        return;
+    }
+    while (directory_entry != NULL) {
+        if (directory_entry->d_name[0] != '.' || flag >= 2) {
+            if (flag == 1 || flag == 3) {
+                printf("%s\t%d\n", directory_entry->d_name, directory_entry->d_type);
+            } else {
+                printf("%s\t", directory_entry->d_name);
+            }
+        }
+        directory_entry = readdir(directory_content);
+    }
+    printf("\n");
 }

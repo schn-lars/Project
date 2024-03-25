@@ -77,7 +77,7 @@ void exec_command() {
     if (strcmp(command, "quit") == 0) {
         quit();
     } else if (strcmp(command, "ls") == 0) {
-        ls(1,".");
+        ls(command[0],".");
     } else {
         notify("Unknown command.");
     }
@@ -95,4 +95,24 @@ void exec_command() {
 void notify(char *message)
 {
     printf("[DAVIS] %s\n", message);
+}
+
+/*
+ * This method gets called by any errors regarding wrong user input.
+ */
+void warn(char *warning)
+{
+    printf("ERROR - %s", warning);
+}
+
+/*
+ * Helpful for executing commands. Easier to compare integers rather than strings.
+ */
+int cast_flag_into_int(char *flag)
+{
+    if (flag[0] != '-') {
+        warn("Wrongful usage of flag. Try '-[FLAG]'.")
+        return -1;
+    }
+
 }
