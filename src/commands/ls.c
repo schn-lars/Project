@@ -2,6 +2,7 @@
 
 void ls(int flag, char *path) // l = 1, a = 2, al = 3
 {
+    LOGGER("in ls command");
     struct dirent *directory_entry;
     DIR *directory_content = opendir(path);
     if (!directory_content) {
