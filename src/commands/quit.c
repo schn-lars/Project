@@ -1,6 +1,3 @@
-/*
- * This file executes the exit command.
- */
 #include "quit.h"
 
 void quit()

@@ -3,6 +3,7 @@
 
 #include "commands/quit.h"
 #include "commands/ls.h"
+#include "commands/help.h"
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>

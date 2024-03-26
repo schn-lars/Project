@@ -1,3 +1,6 @@
+/*
+ * plot [options] -> plots something like idk
+ */
 #include <stdio.h>
 #include <stdlib.h>
 

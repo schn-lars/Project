@@ -175,6 +175,9 @@ void exec_command() {
         } else if (strcmp(command[0][0], "ls") == 0) {
             LOGGER("Calling ls");
             ls(cast_flag_into_int(arguments[0][0]), "."); // TODO argumente korrekt empfangen
+        } else if (strcmp(command[0][0], "help") == 0) {
+            LOGGER("Calling help");
+            help();
         } else {
             warn("Unknown command.");
         }

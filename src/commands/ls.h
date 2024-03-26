@@ -1,9 +1,13 @@
+/*
+ *  ls [OPTION], effect varies due to following options:
+ *      -l => Displays current directory as a list.
+ *      -a => Includes invisible files as well.
+ *
+ */
 #ifndef LS_H
 #define LS_H
 
-/*
- * Header file for ls-command.
- */
+
 
 #include "../davis.h"
 #include <dirent.h>
