@@ -178,6 +178,9 @@ void exec_command() {
         } else if (strcmp(command[0][0], "help") == 0) {
             LOGGER("Calling help");
             help();
+        } else if (strcmp(command[0][0], "clear") == 0) {
+            LOGGER("Calling clear");
+            clear();
         } else {
             warn("Unknown command.");
         }
@@ -240,6 +243,6 @@ void notify(char *message)
  */
 void warn(char *warning)
 {
-    printf("ERROR - %s", warning);
+    printf("ERROR - %s\n", warning);
 }
 

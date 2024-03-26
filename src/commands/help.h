@@ -1,5 +1,5 @@
 /*
- * help -> Prints out all possible commands and their respective effect.
+ *  help -> Prints out all possible commands and their respective effect.
  */
 #ifndef HELP_H
 #define HELP_H

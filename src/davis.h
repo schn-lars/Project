@@ -4,6 +4,8 @@
 #include "commands/quit.h"
 #include "commands/ls.h"
 #include "commands/help.h"
+#include "commands/clear.h"
+#include "commands/plot.h"
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>

@@ -4,7 +4,7 @@
  * Iterates over command folder.
  */
 void help() {
-    const char *directory = "/home/ubuntu/Desktop/Project/src/commands";
+    const char *directory = "./commands";
     DIR *dir;
     struct dirent *ent;
 

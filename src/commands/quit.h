@@ -1,5 +1,5 @@
 /*
- * quit -> Exits the shell
+ *  quit -> Exits the shell
  */
 #ifndef QUIT_H
 #define QUIT_H
