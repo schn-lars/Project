@@ -7,7 +7,7 @@
 char input[MAX_INPUT_BUFFER];
 char *command[MAX_CMD_COUNT][1];
 int no_command = 0;
-char *arguments[MAX_CMD_COUNT][4];
+char *arguments[MAX_CMD_COUNT][MAX_INPUT_COUNT];
 int input_length;
 int shell_running = 1;
 char *log_msg;
@@ -35,8 +35,10 @@ void davis()
     shell_running = 1;
     while (shell_running) {
         get_input();
-        LOGGER("parsing");
+        LOGGER("parsing", "");
         parse_input_into_commands();
+        sort_flags_in_arguments();
+        chain_up_flags();
         exec_command();
         cleanup();
     }
@@ -51,9 +53,7 @@ void get_input() {
         warn("Error reading input.");
         return;
     }
-    LOGGER("cpsn");
     input[strcspn(input, "\n")] = '\0';
-    LOGGER("cpsn done");
 }
 
 
@@ -63,18 +63,15 @@ void get_input() {
  */
 void parse_input_into_commands() {
     for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        LOGGER("aussen");
         command[i][0] = NULL;
         for (int j = 0; j < MAX_INPUT_COUNT; j++) {
-            LOGGER("innen");
             arguments[i][j] = NULL;
         }
     }
-
-    LOGGER("initialization done");
     int word_counter = 0;
     char *token = strtok(input, " ");
     while (token != NULL) {
+        LOGGER("Token:", token);
         if (strcmp(token, "|") == 0) {
             if (word_counter == 0 && no_command == 0) { // Pipe cannot be first token
                 warn("Wrong usage of pipe. No command specified before pipe.");
@@ -88,29 +85,22 @@ void parse_input_into_commands() {
             word_counter = 0; // Reset word counter
         } else {
             if (command[no_command][0] == NULL) { // First word after pipe or start
+                LOGGER("1st cmd NULL", "");
                 command[no_command][0] = strdup(token);
+                LOGGER(command[no_command][0], "");
             } else {
-                arguments[no_command][word_counter - 1] = strdup(token); // Dynamically allocate memory for each argument
+                arguments[no_command][word_counter] = strdup(token); // Dynamically allocate memory for each argument
+                word_counter++;
             }
-            word_counter++;
         }
         token = strtok(NULL, " ");
     }
-    if (command[1][0] != NULL) {
-        no_command++;
-    }
-
-    // Output for debugging purposes
-    for (int i = 0; i < no_command; i++) {
-        printf("Command %d: %s\n", i + 1, command[i][0]);
-        printf("Arguments for Command %d:\n", i + 1);
-        for (int j = 0; j < 4; j++) {
-            if (arguments[i][j] != NULL) {
-                printf("%s ,\n", arguments[i][j]);
-            }
-        }
-    }
-    LOGGER("End of parsing.");
+    no_command++;
+    printf("%d", no_command);
+    //if (command[1][0] != NULL) {
+    //    no_command++;
+    //}
+    LOGGER("End of parsing.", "");
 }
 
 /*
@@ -118,7 +108,7 @@ void parse_input_into_commands() {
  * Commands can be added by elif-statements.
  */
 void exec_command() {
-    LOGGER("starting in exec_command()");
+    LOGGER("starting in exec_command()",arguments[0][0]);
     if (no_command == 2) { // Piping
         printf("Start piping ...");
         // command 0 is being executed first.
@@ -169,17 +159,17 @@ void exec_command() {
         }
     } else {
         // Regular command
-        LOGGER("Executing regular command.");
+        LOGGER("Executing regular command: ", command[0][0]);
         if (strcmp(command[0][0], "quit") == 0) {
             quit();
         } else if (strcmp(command[0][0], "ls") == 0) {
-            LOGGER("Calling ls");
+            LOGGER("Calling ls", "");
             ls(cast_flag_into_int(arguments[0][0]), "."); // TODO argumente korrekt empfangen
         } else if (strcmp(command[0][0], "help") == 0) {
-            LOGGER("Calling help");
+            LOGGER("Calling help: ", "");
             help();
         } else if (strcmp(command[0][0], "clear") == 0) {
-            LOGGER("Calling clear");
+            LOGGER("Calling clear: ", arguments[0][0]);
             clear();
         } else {
             warn("Unknown command.");
@@ -189,11 +179,67 @@ void exec_command() {
 }
 
 /*
+ * This implements the insertion sort algorithm and pushes flags to the left and rest to the right.
+ */
+void sort_flags_in_arguments()
+{
+    LOGGER("Sorting flags ...", "");
+    for (int i = 0; i < MAX_CMD_COUNT; i++) { // Iterates over commands
+        for (int j = MAX_INPUT_COUNT - 1; j > 1; j--) { // Iterates over
+            for (int k = 0; k < MAX_INPUT_COUNT - 1; k++) { // innere Schleife
+                printf("%d, %d\n", j, k);
+                LOGGER("Element: ", arguments[i][k]);
+                if (arguments[i][k] != NULL && arguments[i][k][0] == '-') {
+                    char *temp = arguments[i][k];
+                    arguments[i][k] = arguments[i][k + 1];
+                    arguments[i][k + 1] = temp;
+                }
+            }
+        }
+    }
+    LOGGER("After sort:", "");
+    print_arguments();
+}
+
+/*
+ *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la)
+ */
+void chain_up_flags() {
+    LOGGER("Chaining up.", "");
+    char combined_flags[MAX_INPUT_COUNT];
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+        combined_flags[i] = '\0';
+    }
+    int found_flag = 0;
+
+    for (int i = 0; i < no_command; i++) {
+        for (int k = 0; k < MAX_INPUT_COUNT; k++) {
+            combined_flags[k] = '\0';
+        }
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // Iterate over arguments looking for flags.
+            if (arguments[i][j] != NULL && arguments[i][j][0] == '-') {
+                strcat(combined_flags, arguments[i][j] + 1); // Extracting string
+                arguments[i][j] = NULL;
+                found_flag++;
+            }
+        }
+
+        if (found_flag != 0) {
+            arguments[i][MAX_INPUT_COUNT - 1] = strdup(combined_flags);
+            found_flag = 0;
+            LOGGER("Combined flags: ",arguments[i][0]);
+        }
+    }
+    LOGGER("After chain.", "");
+    print_arguments();
+}
+
+/*
  * Helpful for executing commands. Easier to compare integers rather than strings.
  */
 // @Deprecated
 int cast_flag_into_int(char *flag) {
-    LOGGER(flag);
+    LOGGER("Casting flags:",flag);
     if (flag == NULL) {
         return 0;
     } else if (flag[0] != '-') {
@@ -209,10 +255,13 @@ int cast_flag_into_int(char *flag) {
     return 0;
 }
 
+/*
+ * Frees argument array
+ */
 void cleanup() {
-    LOGGER("cleanup()");
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 4; j++) {
+    LOGGER("cleanup()", "");
+    for (int i = 0; i < MAX_CMD_COUNT; i++) {
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
             if (arguments[i][j] != NULL) {
                 free(arguments[i][j]);
                 arguments[i][j] = NULL;
@@ -224,9 +273,10 @@ void cleanup() {
 /*
  * For testing purposes
  */
-void LOGGER(char *log_statement) {
+void LOGGER(char *desc, char *log_statement) {
     if (LOGGING) {
-        printf("[LOGGER] %s\n", log_statement);
+        printf("[LOGGER] %s ", desc);
+        printf(" %s\n", log_statement);
     }
 }
 
@@ -244,5 +294,18 @@ void notify(char *message)
 void warn(char *warning)
 {
     printf("ERROR - %s\n", warning);
+}
+
+void print_arguments()
+{
+    for (int i = 0; i < no_command; i++) {
+        printf("Command %d: %s\n", i + 1, command[i][0]);
+        printf("Arguments for Command %d:\n", i + 1);
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+            //if (arguments[i][j] != NULL) {
+                printf("%s,\n", arguments[i][j]);
+            //}
+        }
+    }
 }
 
