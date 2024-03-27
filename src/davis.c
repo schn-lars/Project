@@ -34,11 +34,13 @@ void davis()
     printf("Hey, I'm DAVIS. How may I assist You?\n");
     shell_running = 1;
     while (shell_running) {
-        get_input();
+        get_input(); // ls q w -l e -o -p
         LOGGER("parsing", "");
-        parse_input_into_commands();
+        parse_input_into_commands(); // korrekt geparst
         sort_flags_in_arguments();
-        chain_up_flags();
+        //chain_up_flags();
+        LOGGER("PRINT ARGS", "");
+        print_arguments();
         exec_command();
         cleanup();
     }
@@ -96,10 +98,6 @@ void parse_input_into_commands() {
         token = strtok(NULL, " ");
     }
     no_command++;
-    printf("%d", no_command);
-    //if (command[1][0] != NULL) {
-    //    no_command++;
-    //}
     LOGGER("End of parsing.", "");
 }
 
@@ -185,11 +183,40 @@ void sort_flags_in_arguments()
 {
     LOGGER("Sorting flags ...", "");
     for (int i = 0; i < MAX_CMD_COUNT; i++) { // Iterates over commands
-        for (int j = MAX_INPUT_COUNT - 1; j > 1; j--) { // Iterates over
-            for (int k = 0; k < MAX_INPUT_COUNT - 1; k++) { // innere Schleife
-                printf("%d, %d\n", j, k);
-                LOGGER("Element: ", arguments[i][k]);
-                if (arguments[i][k] != NULL && arguments[i][k][0] == '-') {
+        for (int j = 0; j < MAX_INPUT_COUNT - 1; j++) { // Iterates over elements in the array
+            for (int k = 0; k < MAX_INPUT_COUNT - 1 - j; k++) {
+                if (arguments[i][k] == NULL || arguments[i][k+1] == NULL) {
+                    continue; // ignore NULL-elements
+                }
+
+                // Checking if elements are flags
+                int isFlagK = (arguments[i][k][0] == '-');
+                int isFlagK1 = (arguments[i][k+1][0] == '-');
+
+                // is current element is flag or next?
+                // or both are flags and current came first
+                if ((isFlagK && !isFlagK1) || (isFlagK && isFlagK1 && strcmp(arguments[i][k], arguments[i][k+1]) > 0)) {
+                    // swapping
+                    char *temp = arguments[i][k];
+                    arguments[i][k] = arguments[i][k + 1];
+                    arguments[i][k + 1] = temp;
+                }
+            }
+        }
+
+        // Sort not-flags
+        for (int j = 0; j < MAX_INPUT_COUNT - 1; j++) { // Iterates over elements in the array
+            for (int k = 0; k < MAX_INPUT_COUNT - 1 - j; k++) {
+                if (arguments[i][k] == NULL || arguments[i][k+1] == NULL) {
+                    continue;
+                }
+
+                int isFlagK = (arguments[i][k][0] == '-');
+                int isFlagK1 = (arguments[i][k+1][0] == '-');
+
+                // both are not flags
+                if ((!isFlagK && !isFlagK1) || (!isFlagK && isFlagK1)) {
+                    // swap
                     char *temp = arguments[i][k];
                     arguments[i][k] = arguments[i][k + 1];
                     arguments[i][k + 1] = temp;
@@ -228,10 +255,22 @@ void chain_up_flags() {
             arguments[i][MAX_INPUT_COUNT - 1] = strdup(combined_flags);
             found_flag = 0;
             LOGGER("Combined flags: ",arguments[i][0]);
+            //put_flags_first();
         }
     }
     LOGGER("After chain.", "");
     print_arguments();
+}
+
+void put_flags_first()
+{
+    for (int i = 0; i < MAX_CMD_COUNT; i++) {
+        for (int j = MAX_INPUT_COUNT - 2; j >= 0; j--) {
+            if (arguments[i][j] != NULL) {
+                arguments[i][j + 1] = arguments[i][j];
+            }
+        }
+    }
 }
 
 /*

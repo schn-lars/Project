@@ -32,5 +32,6 @@ void LOGGER(char *desc, char *log_statement);
 void chain_up_flags();
 void sort_flags_in_arguments();
 void print_arguments();
+void put_flags_first();
 
 #endif
