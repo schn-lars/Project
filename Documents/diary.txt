@@ -1,1 +1,5 @@
 Diary Davis:
+
+Tasks:
+    - [Lars] ls command
+    - [Lars] weitere commands notieren die zu implementieren sind (cd, touch, cp, mv)?
