@@ -1,0 +1,5 @@
+Subjects:
+-Problems to solve
+-solutions
+-how to solve (implemetation, etc.)
+-gantt plan

@@ -1,0 +1,39 @@
+Project plan (starting 04.04.2024)
+
+Week 1:
+    - [Lars] command parsing, set interpretation rules for shell
+    - [Lars / Mirco] lay out key necessities and commands offered by our shell
+    - [Lars] working terminal window
+    - [Mirco] get familiar with plots and latex templates
+
+Week 2:
+    - [Lars] start implementation of (shell)-commands
+    - [Mirco] start implementation of (plot)-commands
+
+Week 3:
+    - [Mirco] latex templates preparation (journal, homework, ...)
+        + research on how to connect plots with templates
+    - [Lars] working on implementing (shell)-commands
+    - [Lars / Mirco] setting rules on how to connect plots with shell (commands)
+
+Week 4:
+    - [Lars] finalizing implementations of commands
+    - [Mirco] finalizing implementations of plotting
+
+Week 4:
+    - [Lars] finalizing implementations of commands
+    - [Mirco] finalizing implementations of plotting
+
+Week 5:
+    - [Lars / Mirco] finalizing implementation + integration of plots and commands
+    - [Lars / Mirco] bug hunting, error handling
+
+Week 6: (Pfingst-weekend)
+    - Finish code.
+
+Week 7+:
+    - [Lars / Mirco] writing report, final presentation
+
+Fun cimics:
+    - Wordle command
+    - history
