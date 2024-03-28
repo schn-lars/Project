@@ -35,11 +35,8 @@ void davis()
     shell_running = 1;
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
-        LOGGER("parsing", "");
         parse_input_into_commands(); // korrekt geparst
         sort_flags_in_arguments();
-        //chain_up_flags();
-        LOGGER("PRINT ARGS", "");
         print_arguments();
         exec_command();
         cleanup();
@@ -181,81 +178,51 @@ void exec_command() {
  */
 void sort_flags_in_arguments()
 {
+    char *tmp_flags[MAX_INPUT_COUNT];
+    for (int t = 0; t < MAX_INPUT_COUNT; t++) {
+        tmp_flags[t] = NULL;
+    }
+    int flagCounter = 0;
     LOGGER("Sorting flags ...", "");
-    for (int i = 0; i < MAX_CMD_COUNT; i++) { // Iterates over commands
-        for (int j = 0; j < MAX_INPUT_COUNT - 1; j++) { // Iterates over elements in the array
-            for (int k = 0; k < MAX_INPUT_COUNT - 1 - j; k++) {
-                if (arguments[i][k] == NULL || arguments[i][k+1] == NULL) {
-                    continue; // ignore NULL-elements
-                }
-
-                // Checking if elements are flags
-                int isFlagK = (arguments[i][k][0] == '-');
-                int isFlagK1 = (arguments[i][k+1][0] == '-');
-
-                // is current element is flag or next?
-                // or both are flags and current came first
-                if ((isFlagK && !isFlagK1) || (isFlagK && isFlagK1 && strcmp(arguments[i][k], arguments[i][k+1]) > 0)) {
-                    // swapping
-                    char *temp = arguments[i][k];
-                    arguments[i][k] = arguments[i][k + 1];
-                    arguments[i][k + 1] = temp;
-                }
+    for (int i = 0; i < MAX_CMD_COUNT; i++) {
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+            if ((arguments[i][j] != NULL) && (arguments[i][j][0] == '-')) {
+                tmp_flags[flagCounter] = arguments[i][j];
+                arguments[i][j] = NULL;
+                flagCounter++;
             }
         }
-
-        // Sort not-flags
-        for (int j = 0; j < MAX_INPUT_COUNT - 1; j++) { // Iterates over elements in the array
-            for (int k = 0; k < MAX_INPUT_COUNT - 1 - j; k++) {
-                if (arguments[i][k] == NULL || arguments[i][k+1] == NULL) {
-                    continue;
-                }
-
-                int isFlagK = (arguments[i][k][0] == '-');
-                int isFlagK1 = (arguments[i][k+1][0] == '-');
-
-                // both are not flags
-                if ((!isFlagK && !isFlagK1) || (!isFlagK && isFlagK1)) {
-                    // swap
-                    char *temp = arguments[i][k];
-                    arguments[i][k] = arguments[i][k + 1];
-                    arguments[i][k + 1] = temp;
-                }
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+            if ((arguments[i][j] != NULL)) {
+                tmp_flags[flagCounter] = arguments[i][j];
+                flagCounter++;
             }
+        }
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+            arguments[i][j] = tmp_flags[j];
+            tmp_flags[j] = NULL;
         }
     }
-    LOGGER("After sort:", "");
-    print_arguments();
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+        free(tmp_flags[i]);
+    }
 }
 
 /*
- *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la)
+ *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la) and moving rest closer
  */
 void chain_up_flags() {
     LOGGER("Chaining up.", "");
-    char combined_flags[MAX_INPUT_COUNT];
-    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
-        combined_flags[i] = '\0';
-    }
-    int found_flag = 0;
-
+    char combined_flags[MAX_INPUT_COUNT * 10];
     for (int i = 0; i < no_command; i++) {
-        for (int k = 0; k < MAX_INPUT_COUNT; k++) {
-            combined_flags[k] = '\0';
-        }
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // Iterate over arguments looking for flags.
-            if (arguments[i][j] != NULL && arguments[i][j][0] == '-') {
-                strcat(combined_flags, arguments[i][j] + 1); // Extracting string
-                arguments[i][j] = NULL;
+        int found_flag = 0;
+        for (int l = 0; l < MAX_INPUT_COUNT; l++) {
+            if (arguments[i][l][0] == '-') {
+                strcat(combined_flags, arguments[i][l]);
                 found_flag++;
+            } else {
+                break;
             }
-        }
-
-        if (found_flag != 0) {
-            arguments[i][MAX_INPUT_COUNT - 1] = strdup(combined_flags);
-            found_flag = 0;
-            LOGGER("Combined flags: ",arguments[i][0]);
-            //put_flags_first();
         }
     }
     LOGGER("After chain.", "");
