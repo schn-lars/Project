@@ -36,7 +36,12 @@ void davis()
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
         parse_input_into_commands(); // korrekt geparst
+        print_arguments();
         sort_flags_in_arguments();
+        print_arguments();
+        chain_up_flags();
+        print_arguments();
+        put_flags_first();
         print_arguments();
         exec_command();
         cleanup();
@@ -185,26 +190,24 @@ void sort_flags_in_arguments()
     int flagCounter = 0;
     LOGGER("Sorting flags ...", "");
     for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // first pick flags
             if ((arguments[i][j] != NULL) && (arguments[i][j][0] == '-')) {
                 tmp_flags[flagCounter] = arguments[i][j];
                 arguments[i][j] = NULL;
                 flagCounter++;
             }
         }
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // secondly pick non-empty spots
             if ((arguments[i][j] != NULL)) {
                 tmp_flags[flagCounter] = arguments[i][j];
                 flagCounter++;
             }
         }
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        for (int j = 0; j < flagCounter; j++) { // fill them back in
             arguments[i][j] = tmp_flags[j];
-            tmp_flags[j] = NULL;
         }
-    }
-    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
-        free(tmp_flags[i]);
+        flagCounter = 0;
+        LOGGER("Sorting done.", "");
     }
 }
 
@@ -212,29 +215,48 @@ void sort_flags_in_arguments()
  *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la) and moving rest closer
  */
 void chain_up_flags() {
-    LOGGER("Chaining up.", "");
-    char combined_flags[MAX_INPUT_COUNT * 10];
-    for (int i = 0; i < no_command; i++) {
-        int found_flag = 0;
-        for (int l = 0; l < MAX_INPUT_COUNT; l++) {
-            if (arguments[i][l][0] == '-') {
-                strcat(combined_flags, arguments[i][l]);
-                found_flag++;
+    printf("Chaining up.\n");
+    char combined_flags[MAX_INPUT_COUNT * 10]; // Genügend Platz für kombinierte Flags
+    combined_flags[0] = '\0'; // Initialisieren Sie den kombinierten Flag-String
+
+    for (int i = 0; i < MAX_CMD_COUNT; i++) {
+        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+            if (arguments[i][j] != NULL && arguments[i][j][0] == '-') {
+                if (j != 0) {
+                    strcat(combined_flags, arguments[i][j] + 1);
+                    arguments[i][j] = NULL; // Setze das aktuelle Argument auf NULL
+                } else {
+                    strcat(combined_flags, arguments[i][j]);
+                    arguments[i][j] = NULL;
+                }
             } else {
                 break;
             }
         }
+        arguments[i][0] = strdup(combined_flags);
+        combined_flags[0] = '\0'; // Setze den kombinierten Flag-String zurück
     }
-    LOGGER("After chain.", "");
-    print_arguments();
 }
 
-void put_flags_first()
+/**
+ * Finalizes the commands.
+ * Input: [-FLAGS, NULL, ... , ARGS, ..., NULL]
+ * Output: [-FLAGS, ARGS, NULL, ...]
+ */
+void put_flags_first() // [0] is combined flag, rest may vary
 {
+    LOGGER("put_flags_first()" , "start");
     for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        for (int j = MAX_INPUT_COUNT - 2; j >= 0; j--) {
-            if (arguments[i][j] != NULL) {
-                arguments[i][j + 1] = arguments[i][j];
+        int non_flag_index = 0;
+        while (arguments[i][non_flag_index] != NULL && arguments[i][non_flag_index][0] == '-') {
+            non_flag_index++;
+        }
+        for (int j = non_flag_index + 1; j < MAX_INPUT_COUNT; j++) {
+            if (arguments[i][j] != NULL && arguments[i][j][0] != '-') {
+                char *temp = arguments[i][non_flag_index];
+                arguments[i][non_flag_index] = arguments[i][j];
+                arguments[i][j] = temp;
+                non_flag_index++;
             }
         }
     }
