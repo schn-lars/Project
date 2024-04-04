@@ -216,15 +216,17 @@ void sort_flags_in_arguments()
  */
 void chain_up_flags() {
     printf("Chaining up.\n");
-    char combined_flags[MAX_INPUT_COUNT * 10]; // Genügend Platz für kombinierte Flags
-    combined_flags[0] = '\0'; // Initialisieren Sie den kombinierten Flag-String
+    char combined_flags[MAX_INPUT_COUNT * 10];
+    combined_flags[0] = '\0';
 
     for (int i = 0; i < MAX_CMD_COUNT; i++) {
+        int foundFlag = 0;
         for (int j = 0; j < MAX_INPUT_COUNT; j++) {
             if (arguments[i][j] != NULL && arguments[i][j][0] == '-') {
+                foundFlag++;
                 if (j != 0) {
                     strcat(combined_flags, arguments[i][j] + 1);
-                    arguments[i][j] = NULL; // Setze das aktuelle Argument auf NULL
+                    arguments[i][j] = NULL; // reset current argument
                 } else {
                     strcat(combined_flags, arguments[i][j]);
                     arguments[i][j] = NULL;
@@ -233,9 +235,12 @@ void chain_up_flags() {
                 break;
             }
         }
-        arguments[i][0] = strdup(combined_flags);
-        combined_flags[0] = '\0'; // Setze den kombinierten Flag-String zurück
+        if (foundFlag != 0) {
+            arguments[i][0] = strdup(combined_flags);
+            combined_flags[0] = '\0'; // reset
+        }
     }
+    LOGGER("Chaining", "Done");
 }
 
 /**
@@ -247,16 +252,15 @@ void put_flags_first() // [0] is combined flag, rest may vary
 {
     LOGGER("put_flags_first()" , "start");
     for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        int non_flag_index = 0;
-        while (arguments[i][non_flag_index] != NULL && arguments[i][non_flag_index][0] == '-') {
-            non_flag_index++;
-        }
-        for (int j = non_flag_index + 1; j < MAX_INPUT_COUNT; j++) {
-            if (arguments[i][j] != NULL && arguments[i][j][0] != '-') {
-                char *temp = arguments[i][non_flag_index];
-                arguments[i][non_flag_index] = arguments[i][j];
-                arguments[i][j] = temp;
-                non_flag_index++;
+        for (int j = 1; j < MAX_INPUT_COUNT; j++) {
+            if (arguments[i][j] == NULL) {
+                for (int k = j + 1; k < MAX_INPUT_COUNT; k++) {
+                    if (arguments[i][k] != NULL) {
+                        arguments[i][j] = arguments[i][k];
+                        arguments[i][k] = NULL;
+                        break;
+                    }
+                }
             }
         }
     }
