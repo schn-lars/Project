@@ -12,7 +12,7 @@ char *test_arguments[MAX_CMD_COUNT][MAX_INPUT_COUNT];
 int main()
 {
     if (setup_tests() == 1) {
-        printf("Tests completed!\n");
+        printf("Tests successful!\n");
     } else {
         printf("Tests failed.\n");
     }
@@ -30,15 +30,35 @@ void clear_args()
 
 int setup_tests()
 {
-    char *test_arguments[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+    char *test_arguments1[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
             {"1", "2", "3", NULL},
             {"-3", "o", "NULL", "-l"},
     };
-    char *expected[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+    char *expected1[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
             {"1", "2", "3"},
             {"-3l", "o", "NULL", NULL},
     };
-    if (execute_test(test_arguments, expected) == 0) {
+    if (execute_test(test_arguments1, expected1) == 0) {
+        return 0;
+    }
+    char *test_arguments2[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+            {"test-txt", "plot", "-l", "-l"},
+            {"Hallo", "test.txt", "-ht", "-p", "Cerberus"},
+    };
+    char *expected2[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+            {"-ll", "test-txt", "plot"},
+            {"-htp", "Hallo", "test.txt", "Cerberus"},
+    };
+    if (execute_test(test_arguments2, expected2) == 0) {
+        return 0;
+    }
+    char *test_arguments3[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+            {"_txt", "-D", "L", "-A", "A","-V", "-I", "R","-S", "S"},
+    };
+    char *expected3[MAX_CMD_COUNT][MAX_INPUT_COUNT] = {
+            {"-DAVIS", "_txt", "L", "A", "R", "S"},
+    };
+    if (execute_test(test_arguments3, expected3) == 0) {
         return 0;
     }
     return 1;
