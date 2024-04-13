@@ -6,6 +6,7 @@
 
 char input[MAX_INPUT_BUFFER];
 struct Input *in;
+int second_cmd_procedure;
 int no_command = 0;
 int input_length;
 int shell_running = 1;
@@ -71,6 +72,7 @@ void get_input() {
         in->cmd_two[i][0] = '\0';
     }
     in->no_commands = 0;
+    second_cmd_procedure = 0;
 }
 
 
@@ -80,10 +82,20 @@ void get_input() {
  */
 void parse_input_into_commands() {
     int arg_counter = 0;
-    char *pipe_token = strchr(input, '|');
+    char *input_copy = strdup(input); // Kopie der Eingabe machen
+    char *pipe_token = strchr(input_copy, '|');
+    char *saveptr;
     if (pipe_token != NULL) {
         LOGGER("Parsing()", "Command with pipe.");
-        char *tmp = strtok(pipe_token, " ");
+        char *first_half = strtok(input_copy, "|");
+        char *second_half = strtok(NULL, "|");
+        while (*second_half == ' ') { // clear spaces
+            second_half++;
+        }
+        printf("%s\n", first_half);
+        printf("%s\n", second_half);
+
+        char *tmp = strtok_r(first_half, " ", &saveptr);
         while (tmp != NULL) {
             if (arg_counter >= MAX_INPUT_COUNT) {
                 warn("You exceeded argument count on the first command!");
@@ -91,13 +103,13 @@ void parse_input_into_commands() {
             }
             strcpy(in->cmd_one[arg_counter], tmp);
             arg_counter++;
-            tmp = strtok(NULL, " "); // anstatt pipe token
+            tmp = strtok_r(NULL, " ", &saveptr);
         }
         in->cmd_one[arg_counter] = NULL;
         arg_counter = 0;
+
         // We have reached the end of the first command
-        pipe_token = strtok(NULL, "");
-        tmp = strtok(pipe_token, " ");
+        tmp = strtok_r(second_half, " ", &saveptr);
         while (tmp != NULL) {
             if (arg_counter >= MAX_INPUT_COUNT) {
                 warn("You exceeded argument count on the second command!");
@@ -105,27 +117,26 @@ void parse_input_into_commands() {
             }
             strcpy(in->cmd_two[arg_counter], tmp);
             arg_counter++;
-            tmp = strtok(NULL, " "); // anstatt pipe_token
+            tmp = strtok_r(NULL, " ", &saveptr);
         }
-        in->cmd_two[arg_counter]= NULL;
-        arg_counter = 0;
+        in->cmd_two[arg_counter] = NULL;
         in->no_commands = 2;
     } else {
         LOGGER("Parsing()", "Command without pipe.");
-        char *tmp = strtok(input, " ");
+        char *tmp = strtok(input_copy, " ");
         while (tmp != NULL) {
             if (arg_counter >= MAX_INPUT_COUNT) {
                 warn("You exceeded argument count on the command!");
                 break;
             }
-            in->cmd_one[arg_counter] = tmp;
+            strcpy(in->cmd_one[arg_counter], tmp);
             arg_counter++;
             tmp = strtok(NULL, " ");
         }
         in->cmd_one[arg_counter] = NULL;
-        arg_counter = 0;
         in->no_commands = 1;
     }
+    free(input_copy); // Freigeben der Kopie der Eingabe
     LOGGER("End of parsing.", "");
 }
 
@@ -135,6 +146,10 @@ void parse_input_into_commands() {
  */
 void exec_command() {
     LOGGER("starting in exec_command()",in->cmd_one[0]);
+    if (in->cmd_one[0] == NULL) {
+        warn("Please enter a valid input.");
+        return;
+    }
     if (no_command == 2) { // Piping
         printf("Start piping ...");
         // command 0 is being executed first.
@@ -249,9 +264,9 @@ void sort_flags_in_arguments(char **parsed_input)
         printf("tmp_flags[%d] = %s\n", j, tmp_flags[j]);
     }
 
-    for (int j = 1; j < flagCounter; j++) { // fill them back in
+    for (int j = 1; j <= flagCounter; j++) { // fill them back in
         if (tmp_flags[j] != NULL) {
-            strcpy(parsed_input[j], tmp_flags[j]);
+            strcpy(parsed_input[j], tmp_flags[j - 1]);
         }
     }
     flagCounter = 0;
@@ -259,8 +274,10 @@ void sort_flags_in_arguments(char **parsed_input)
     for (int t = 0; t < MAX_INPUT_COUNT; t++) {
         free(tmp_flags[t]);
     }
-    if (no_command == 2) {
+    if (in->no_commands == 2 && second_cmd_procedure == 0) {
+        second_cmd_procedure = 1;
         sort_flags_in_arguments(in->cmd_two);
+        second_cmd_procedure = 0;
     }
 }
 
@@ -272,10 +289,10 @@ void chain_up_flags(char **parsed_sorted_input) {
     char combined_flags[MAX_INPUT_COUNT * 10];
     combined_flags[0] = '\0';
     int foundFlag = 0;
-    for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+    for (int j = 1; j < MAX_INPUT_COUNT; j++) {
         if (parsed_sorted_input[j] != NULL && parsed_sorted_input[j][0] == '-') {
             foundFlag++;
-            if (j != 0) {
+            if (foundFlag != 1) {
                 strcat(combined_flags, parsed_sorted_input[j] + 1);
                 parsed_sorted_input[j][0] = '\0'; // reset current argument
             } else {
@@ -291,29 +308,36 @@ void chain_up_flags(char **parsed_sorted_input) {
         combined_flags[0] = '\0'; // reset
     }
     LOGGER("Chaining", "Done");
-    if (no_command == 2) {
+    if (in->no_commands == 2 && second_cmd_procedure == 0) {
+        second_cmd_procedure = 1;
         chain_up_flags(in->cmd_two);
+        second_cmd_procedure = 0;
     }
 }
 
 /**
  * Finalizes the commands.
- * Input: [-FLAGS, NULL, ... , ARGS, ..., NULL]
- * Output: [-FLAGS, ARGS, NULL, ...]
+ * Input: [CMD, -FLAGS, NULL, ... , ARGS, ..., NULL]
+ * Output: [CMD, -FLAGS, ARGS, NULL, ...]
  */
 void put_flags_first(char **chained_up_flags) // [0] is combined flag, rest may vary
 {
     LOGGER("put_flags_first()" , "start");
     for (int j = 1; j < MAX_INPUT_COUNT; j++) {
-        if (chained_up_flags[j][0] == '\0') {
+        if (chained_up_flags[j] != NULL && chained_up_flags[j][0] == '\0') {
             for (int k = j + 1; k < MAX_INPUT_COUNT; k++) {
-                if (chained_up_flags[k][0] != '\0') {
+                if (chained_up_flags[k] != NULL && chained_up_flags[k][0] != '\0') {
                     strcpy(chained_up_flags[j], chained_up_flags[k]);
                     chained_up_flags[k][0] = '\0';
                     break;
                 }
             }
         }
+    }
+    if (in->no_commands == 2 && second_cmd_procedure == 0) {
+        second_cmd_procedure = 1;
+        put_flags_first(in->cmd_two);
+        second_cmd_procedure = 0;
     }
 }
 
@@ -361,6 +385,7 @@ void print_arguments()
             printf("Args sind jetzt NULLs.\n");
         }
     }
+    printf("Zweiter command:\n");
     for (int j = 0; j < MAX_INPUT_COUNT; j++) {
         if (in->cmd_two[j] != NULL) {
             printf("%s,\n", in->cmd_two[j]);
