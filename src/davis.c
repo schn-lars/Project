@@ -5,9 +5,8 @@
  */
 
 char input[MAX_INPUT_BUFFER];
-char *command[MAX_CMD_COUNT][1];
+struct Input *in;
 int no_command = 0;
-char *arguments[MAX_CMD_COUNT][MAX_INPUT_COUNT];
 int input_length;
 int shell_running = 1;
 char *log_msg;
@@ -37,11 +36,11 @@ void davis()
         get_input(); // ls q w -l e -o -p
         parse_input_into_commands(); // korrekt geparst
         print_arguments();
-        sort_flags_in_arguments();
+        sort_flags_in_arguments(in->cmd_one);
         print_arguments();
-        chain_up_flags();
+        chain_up_flags(in->cmd_one);
         print_arguments();
-        put_flags_first();
+        put_flags_first(in->cmd_one);
         print_arguments();
         exec_command();
         cleanup();
@@ -58,6 +57,20 @@ void get_input() {
         return;
     }
     input[strcspn(input, "\n")] = '\0';
+
+    // -----
+    in = (struct Input *)malloc(sizeof(struct Input));
+    if (in == NULL) {
+        warn("Could not allocate memory for struct Input");
+        exit(1);
+    }
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+        in->cmd_one[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char)); // Speicher für Befehlszeichenketten
+        in->cmd_one[i][0] = '\0';
+        in->cmd_two[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
+        in->cmd_two[i][0] = '\0';
+    }
+    in->no_commands = 0;
 }
 
 
@@ -66,40 +79,53 @@ void get_input() {
  * Translating the given input in syntactically correct parameters.
  */
 void parse_input_into_commands() {
-    for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        command[i][0] = NULL;
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
-            arguments[i][j] = NULL;
+    int arg_counter = 0;
+    char *pipe_token = strchr(input, '|');
+    if (pipe_token != NULL) {
+        LOGGER("Parsing()", "Command with pipe.");
+        char *tmp = strtok(pipe_token, " ");
+        while (tmp != NULL) {
+            if (arg_counter >= MAX_INPUT_COUNT) {
+                warn("You exceeded argument count on the first command!");
+                break;
+            }
+            strcpy(in->cmd_one[arg_counter], tmp);
+            arg_counter++;
+            tmp = strtok(NULL, " "); // anstatt pipe token
         }
-    }
-    int word_counter = 0;
-    char *token = strtok(input, " ");
-    while (token != NULL) {
-        LOGGER("Token:", token);
-        if (strcmp(token, "|") == 0) {
-            if (word_counter == 0 && no_command == 0) { // Pipe cannot be first token
-                warn("Wrong usage of pipe. No command specified before pipe.");
-                return;
+        in->cmd_one[arg_counter] = NULL;
+        arg_counter = 0;
+        // We have reached the end of the first command
+        pipe_token = strtok(NULL, "");
+        tmp = strtok(pipe_token, " ");
+        while (tmp != NULL) {
+            if (arg_counter >= MAX_INPUT_COUNT) {
+                warn("You exceeded argument count on the second command!");
+                break;
             }
-            if (no_command >= MAX_CMD_COUNT) {
-                warn("Too many commands. Ignoring excess commands.");
-                return;
-            }
-            no_command++; // Increase the number of commands
-            word_counter = 0; // Reset word counter
-        } else {
-            if (command[no_command][0] == NULL) { // First word after pipe or start
-                LOGGER("1st cmd NULL", "");
-                command[no_command][0] = strdup(token);
-                LOGGER(command[no_command][0], "");
-            } else {
-                arguments[no_command][word_counter] = strdup(token); // Dynamically allocate memory for each argument
-                word_counter++;
-            }
+            strcpy(in->cmd_two[arg_counter], tmp);
+            arg_counter++;
+            tmp = strtok(NULL, " "); // anstatt pipe_token
         }
-        token = strtok(NULL, " ");
+        in->cmd_two[arg_counter]= NULL;
+        arg_counter = 0;
+        in->no_commands = 2;
+    } else {
+        LOGGER("Parsing()", "Command without pipe.");
+        char *tmp = strtok(input, " ");
+        while (tmp != NULL) {
+            if (arg_counter >= MAX_INPUT_COUNT) {
+                warn("You exceeded argument count on the command!");
+                break;
+            }
+            in->cmd_one[arg_counter] = tmp;
+            arg_counter++;
+            tmp = strtok(NULL, " ");
+        }
+        in->cmd_one[arg_counter] = NULL;
+        arg_counter = 0;
+        in->no_commands = 1;
     }
-    no_command++;
     LOGGER("End of parsing.", "");
 }
 
@@ -108,7 +134,7 @@ void parse_input_into_commands() {
  * Commands can be added by elif-statements.
  */
 void exec_command() {
-    LOGGER("starting in exec_command()",arguments[0][0]);
+    LOGGER("starting in exec_command()",in->cmd_one[0]);
     if (no_command == 2) { // Piping
         printf("Start piping ...");
         // command 0 is being executed first.
@@ -129,8 +155,9 @@ void exec_command() {
             close(fd[0]);
             dup2(fd[1], STDOUT_FILENO);
             close(fd[1]);
-            if (execvp(command[0][0], arguments[0]) < 0) {
+            if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                 warn("First command failed.");
+                printf("%s", in->cmd_one[0]);
                 exit(0);
             }
         } else {
@@ -140,14 +167,15 @@ void exec_command() {
                 return;
             }
 
-            // Child 2 executing..
+            // Child 2 executing...
             // It only needs to read at the read end
             if (p2 == 0) {
                 close(fd[1]);
                 dup2(fd[0], STDIN_FILENO);
                 close(fd[0]);
-                if (execvp(command[1][0], arguments[1]) < 0) {
+                if (execvp(in->cmd_two[0], in->cmd_two) < 0) {
                     warn("Second command failed.");
+                    printf("%s", in->cmd_two[0]);
                     exit(0);
                 }
             } else {
@@ -159,88 +187,113 @@ void exec_command() {
         }
     } else {
         // Regular command
-        LOGGER("Executing regular command: ", command[0][0]);
-        if (strcmp(command[0][0], "quit") == 0) {
+        LOGGER("Executing regular command: ", in->cmd_one[0]);
+        if (strcmp(in->cmd_one[0], "quit") == 0) {
             quit();
-        } else if (strcmp(command[0][0], "ls") == 0) {
+        } else if (strcmp(in->cmd_one[0], "ls") == 0) {
             LOGGER("Calling ls", "");
-            ls(cast_flag_into_int(arguments[0][0]), "."); // TODO argumente korrekt empfangen
-        } else if (strcmp(command[0][0], "help") == 0) {
+            //ls(in);
+        } else if (strcmp(in->cmd_one[0], "help") == 0) {
             LOGGER("Calling help: ", "");
             help();
-        } else if (strcmp(command[0][0], "clear") == 0) {
-            LOGGER("Calling clear: ", arguments[0][0]);
+        } else if (strcmp(in->cmd_one[0], "clear") == 0) {
+            LOGGER("Calling clear: ", in->cmd_one[0]);
             clear();
+        } else if (strcmp(in->cmd_one[0], "hist") == 0) {
+            LOGGER("Calling hist: ", in->cmd_one[0]);
+            //hist(in);
         } else {
             warn("Unknown command.");
         }
     }
-    no_command = 0;
+    in->no_commands = 0;
 }
 
 /*
  * This implements the insertion sort algorithm and pushes flags to the left and rest to the right.
  */
-void sort_flags_in_arguments()
+void sort_flags_in_arguments(char **parsed_input)
 {
     char *tmp_flags[MAX_INPUT_COUNT];
     for (int t = 0; t < MAX_INPUT_COUNT; t++) {
-        tmp_flags[t] = NULL;
+        tmp_flags[t] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
+        if (tmp_flags[t] == NULL) {
+            warn("Error - sort_flags");
+            return;
+        }
+        tmp_flags[t][0] = '\0';
     }
     int flagCounter = 0;
     LOGGER("Sorting flags ...", "");
-    for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // first pick flags
-            if ((arguments[i][j] != NULL) && (arguments[i][j][0] == '-')) {
-                tmp_flags[flagCounter] = arguments[i][j];
-                arguments[i][j] = NULL;
+    for (int j = 1; j < MAX_INPUT_COUNT; j++) { // first pick flags
+        if (parsed_input[j] != NULL) {
+            if (parsed_input[j][0] == '-') {
+                strcpy(tmp_flags[flagCounter], parsed_input[j]);
+                parsed_input[j][0] = '\0';
                 flagCounter++;
             }
+        } else {
+            break;
         }
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) { // secondly pick non-empty spots
-            if ((arguments[i][j] != NULL)) {
-                tmp_flags[flagCounter] = arguments[i][j];
-                flagCounter++;
-            }
+    }
+    LOGGER("Sorting", "non-empty");
+    for (int j = 1; j < MAX_INPUT_COUNT; j++) { // secondly pick non-empty spots
+        if (parsed_input[j] != NULL && parsed_input[j][0] != '\0') {
+            strcpy(tmp_flags[flagCounter], parsed_input[j]);
+            parsed_input[j][0] = '\0';
+            flagCounter++;
         }
-        for (int j = 0; j < flagCounter; j++) { // fill them back in
-            arguments[i][j] = tmp_flags[j];
+    }
+    LOGGER("Sorting", "fill back up");
+    for (int j = 0; j < flagCounter; j++) {
+        printf("tmp_flags[%d] = %s\n", j, tmp_flags[j]);
+    }
+
+    for (int j = 1; j < flagCounter; j++) { // fill them back in
+        if (tmp_flags[j] != NULL) {
+            strcpy(parsed_input[j], tmp_flags[j]);
         }
-        flagCounter = 0;
-        LOGGER("Sorting done.", "");
+    }
+    flagCounter = 0;
+    LOGGER("Sorting done.", "");
+    for (int t = 0; t < MAX_INPUT_COUNT; t++) {
+        free(tmp_flags[t]);
+    }
+    if (no_command == 2) {
+        sort_flags_in_arguments(in->cmd_two);
     }
 }
 
 /*
  *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la) and moving rest closer
  */
-void chain_up_flags() {
+void chain_up_flags(char **parsed_sorted_input) {
     printf("Chaining up.\n");
     char combined_flags[MAX_INPUT_COUNT * 10];
     combined_flags[0] = '\0';
-
-    for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        int foundFlag = 0;
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
-            if (arguments[i][j] != NULL && arguments[i][j][0] == '-') {
-                foundFlag++;
-                if (j != 0) {
-                    strcat(combined_flags, arguments[i][j] + 1);
-                    arguments[i][j] = NULL; // reset current argument
-                } else {
-                    strcat(combined_flags, arguments[i][j]);
-                    arguments[i][j] = NULL;
-                }
+    int foundFlag = 0;
+    for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        if (parsed_sorted_input[j] != NULL && parsed_sorted_input[j][0] == '-') {
+            foundFlag++;
+            if (j != 0) {
+                strcat(combined_flags, parsed_sorted_input[j] + 1);
+                parsed_sorted_input[j][0] = '\0'; // reset current argument
             } else {
-                break;
+                strcat(combined_flags, parsed_sorted_input[j]);
+                parsed_sorted_input[j][0] = '\0';
             }
-        }
-        if (foundFlag != 0) {
-            arguments[i][0] = strdup(combined_flags);
-            combined_flags[0] = '\0'; // reset
+        } else {
+            break;
         }
     }
+    if (foundFlag != 0) {
+        strcpy(parsed_sorted_input[1], combined_flags);
+        combined_flags[0] = '\0'; // reset
+    }
     LOGGER("Chaining", "Done");
+    if (no_command == 2) {
+        chain_up_flags(in->cmd_two);
+    }
 }
 
 /**
@@ -248,18 +301,16 @@ void chain_up_flags() {
  * Input: [-FLAGS, NULL, ... , ARGS, ..., NULL]
  * Output: [-FLAGS, ARGS, NULL, ...]
  */
-void put_flags_first() // [0] is combined flag, rest may vary
+void put_flags_first(char **chained_up_flags) // [0] is combined flag, rest may vary
 {
     LOGGER("put_flags_first()" , "start");
-    for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        for (int j = 1; j < MAX_INPUT_COUNT; j++) {
-            if (arguments[i][j] == NULL) {
-                for (int k = j + 1; k < MAX_INPUT_COUNT; k++) {
-                    if (arguments[i][k] != NULL) {
-                        arguments[i][j] = arguments[i][k];
-                        arguments[i][k] = NULL;
-                        break;
-                    }
+    for (int j = 1; j < MAX_INPUT_COUNT; j++) {
+        if (chained_up_flags[j][0] == '\0') {
+            for (int k = j + 1; k < MAX_INPUT_COUNT; k++) {
+                if (chained_up_flags[k][0] != '\0') {
+                    strcpy(chained_up_flags[j], chained_up_flags[k]);
+                    chained_up_flags[k][0] = '\0';
+                    break;
                 }
             }
         }
@@ -267,39 +318,11 @@ void put_flags_first() // [0] is combined flag, rest may vary
 }
 
 /*
- * Helpful for executing commands. Easier to compare integers rather than strings.
- */
-// @Deprecated
-int cast_flag_into_int(char *flag) {
-    LOGGER("Casting flags:",flag);
-    if (flag == NULL) {
-        return 0;
-    } else if (flag[0] != '-') {
-        warn("Wrongful usage of flag. Try '-[FLAG]'.");
-        return -1;
-    } else if (strcmp(flag, "-l")) {
-        return 1;
-    } else if (strcmp(flag, "-a")) {
-        return 2;
-    } else if (strcmp(flag, "-al")) {
-        return 3;
-    }
-    return 0;
-}
-
-/*
  * Frees argument array
  */
 void cleanup() {
-    LOGGER("cleanup()", "");
-    for (int i = 0; i < MAX_CMD_COUNT; i++) {
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
-            if (arguments[i][j] != NULL) {
-                free(arguments[i][j]);
-                arguments[i][j] = NULL;
-            }
-        }
-    }
+    free(in);
+    LOGGER("Freed input", "");
 }
 
 /*
@@ -330,13 +353,19 @@ void warn(char *warning)
 
 void print_arguments()
 {
-    for (int i = 0; i < no_command; i++) {
-        printf("Command %d: %s\n", i + 1, command[i][0]);
-        printf("Arguments for Command %d:\n", i + 1);
-        for (int j = 0; j < MAX_INPUT_COUNT; j++) {
-            //if (arguments[i][j] != NULL) {
-                printf("%s,\n", arguments[i][j]);
-            //}
+    LOGGER("print_arguments()", "Start");
+    for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        if (in->cmd_one[j] != NULL) {
+            printf("%s,\n", in->cmd_one[j]);
+        } else {
+            printf("Args sind jetzt NULLs.\n");
+        }
+    }
+    for (int j = 0; j < MAX_INPUT_COUNT; j++) {
+        if (in->cmd_two[j] != NULL) {
+            printf("%s,\n", in->cmd_two[j]);
+        } else {
+            printf("Args sind jetzt NULLs.\n");
         }
     }
 }
