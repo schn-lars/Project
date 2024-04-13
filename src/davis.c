@@ -23,6 +23,7 @@ int main()
     printf("░▒▓███████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░    ░▒▓██▓▒░    ░▒▓█▓▒░ ░▒▓███████▓▒░  \n");
     printf("\n");
     // Opening shell.
+    initialize_history();
     davis();
 
     return 0;
@@ -44,7 +45,6 @@ void davis()
         put_flags_first(in->cmd_one);
         print_arguments();
         exec_command();
-        cleanup();
     }
 }
 
@@ -146,12 +146,13 @@ void parse_input_into_commands() {
  */
 void exec_command() {
     LOGGER("starting in exec_command()",in->cmd_one[0]);
-    if (in->cmd_one[0] == NULL) {
+    int executed = 0;
+    if (in == NULL || in->cmd_one[0] == NULL) {
         warn("Please enter a valid input.");
         return;
     }
-    if (no_command == 2) { // Piping
-        printf("Start piping ...");
+    if (in->no_commands == 2) { // Piping
+        LOGGER("Piping: ","Start");
         // command 0 is being executed first.
         int fd[2];
         pid_t p1, p2;
@@ -162,6 +163,7 @@ void exec_command() {
         p1 = fork();
         if (p1 < 0) {
             warn("Problem occurred while forking.");
+            executed = FAILURE;
             return;
         }
 
@@ -174,14 +176,16 @@ void exec_command() {
                 warn("First command failed.");
                 printf("%s", in->cmd_one[0]);
                 exit(0);
+            } else {
+                exit(0);
             }
         } else {
             p2 = fork();
             if (p2 < 0) {
                 warn("Problem occurred while forking.");
+                hist_add(in, FAILURE);
                 return;
             }
-
             // Child 2 executing...
             // It only needs to read at the read end
             if (p2 == 0) {
@@ -207,21 +211,35 @@ void exec_command() {
             quit();
         } else if (strcmp(in->cmd_one[0], "ls") == 0) {
             LOGGER("Calling ls", "");
-            //ls(in);
+            executed = ls(in->cmd_one);
         } else if (strcmp(in->cmd_one[0], "help") == 0) {
             LOGGER("Calling help: ", "");
-            help();
+            executed = help();
         } else if (strcmp(in->cmd_one[0], "clear") == 0) {
             LOGGER("Calling clear: ", in->cmd_one[0]);
-            clear();
+            executed = clear();
         } else if (strcmp(in->cmd_one[0], "hist") == 0) {
             LOGGER("Calling hist: ", in->cmd_one[0]);
-            //hist(in);
+            executed = hist(in);
         } else {
-            warn("Unknown command.");
+            LOGGER("exe_command()","System command executing ...");
+            pid_t sys_cmd = fork();
+            if (sys_cmd == -1) {
+                warn("Forking system command process failed.");
+            }
+            if (sys_cmd == 0) {
+                if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
+                    warn("Could not execute command.");
+                    // TODO interprocess communication to determine whether command was successful or not
+                    exit(0);
+                }
+            } else {
+                wait(NULL);
+            }
         }
     }
-    in->no_commands = 0;
+    hist_add(in, executed);
+    clear_input_struct();
 }
 
 /*
@@ -260,10 +278,6 @@ void sort_flags_in_arguments(char **parsed_input)
         }
     }
     LOGGER("Sorting", "fill back up");
-    for (int j = 0; j < flagCounter; j++) {
-        printf("tmp_flags[%d] = %s\n", j, tmp_flags[j]);
-    }
-
     for (int j = 1; j <= flagCounter; j++) { // fill them back in
         if (tmp_flags[j] != NULL) {
             strcpy(parsed_input[j], tmp_flags[j - 1]);
@@ -285,7 +299,7 @@ void sort_flags_in_arguments(char **parsed_input)
  *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la) and moving rest closer
  */
 void chain_up_flags(char **parsed_sorted_input) {
-    printf("Chaining up.\n");
+    LOGGER("Chain:", "Start");
     char combined_flags[MAX_INPUT_COUNT * 10];
     combined_flags[0] = '\0';
     int foundFlag = 0;
@@ -342,14 +356,6 @@ void put_flags_first(char **chained_up_flags) // [0] is combined flag, rest may 
 }
 
 /*
- * Frees argument array
- */
-void cleanup() {
-    free(in);
-    LOGGER("Freed input", "");
-}
-
-/*
  * For testing purposes
  */
 void LOGGER(char *desc, char *log_statement) {
@@ -377,6 +383,9 @@ void warn(char *warning)
 
 void print_arguments()
 {
+    if (LOGGING == 0) {
+        return;
+    }
     LOGGER("print_arguments()", "Start");
     for (int j = 0; j < MAX_INPUT_COUNT; j++) {
         if (in->cmd_one[j] != NULL) {
@@ -393,5 +402,14 @@ void print_arguments()
             printf("Args sind jetzt NULLs.\n");
         }
     }
+}
+
+void clear_input_struct()
+{
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+        free(in->cmd_one[i]);
+        free(in->cmd_two[i]);
+    }
+    free(in);
 }
 

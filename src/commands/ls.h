@@ -14,6 +14,6 @@
 #include <errno.h>
 
 void display_as_list(char *args); // TODO mit flag -l -> File type | Name
-void ls(struct Input *in); // flag: -a (ALL), -l (LIST)
+int ls(char **args); // flag: -a (ALL), -l (LIST)
 
 #endif

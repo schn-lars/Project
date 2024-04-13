@@ -6,7 +6,7 @@
 
 #include "../davis.h"
 
-void help();
+int help();
 void print_content_until_sequence(const char *filename, const char *sequence);
 
 #endif

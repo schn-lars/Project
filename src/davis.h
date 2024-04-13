@@ -8,6 +8,9 @@
 #define MAX_INPUT_COUNT     30
 #define MAX_CMD_COUNT       2
 #define LOGGING             1 // 1 = enabling logging statements
+#define SCRATCH_FILE        "./shared-file"
+#define FAILURE             0
+#define SUCCESS             1
 
 struct Input {
     char *cmd_one[MAX_INPUT_COUNT];
@@ -27,6 +30,9 @@ struct Input {
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/wait.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+
 
 extern int shell_running;
 
@@ -38,12 +44,11 @@ void parse_input_into_commands();
 void exec_command();
 void notify(char *message);
 void warn(char *warning);
-void cleanup();
 void LOGGER(char *desc, char *log_statement);
 void chain_up_flags(char **parsed_sorted_input);
 void sort_flags_in_arguments(char **parsed_input);
 void print_arguments();
 void put_flags_first(char **chained_up_flags);
-int get_argc(int no_command);
+void clear_input_struct();
 
 #endif

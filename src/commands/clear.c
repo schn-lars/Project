@@ -1,6 +1,7 @@
 #include "clear.h"
 
-void clear()
+int clear()
 {
     system("clear");
+    return 1;
 }

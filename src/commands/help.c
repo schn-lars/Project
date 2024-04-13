@@ -3,7 +3,7 @@
 /*
  * Iterates over command folder.
  */
-void help() {
+int help() {
     const char *directory = "./commands";
     DIR *dir;
     struct dirent *ent;
@@ -19,8 +19,9 @@ void help() {
         closedir(dir);
     } else {
         warn("Cannot open directory");
-        return;
+        return 0;
     }
+    return 1;
 }
 
 /*
