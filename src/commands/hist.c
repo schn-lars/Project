@@ -8,19 +8,35 @@ int hist(struct Input *input)
     if (history->size == 0) {
         printf("There are no tracked commands.\n");
     } else {
-        if (input->cmd_one[0] == NULL || input->cmd_one[1] == NULL) {
-            printf("Wrong usage of hist. Usage hist [-t,f,a]\n");
-            return 0;
+        if (input->cmd_one[1] == NULL) {
+            print_history(-1, DEFAULT_COUNT);
+            return 1;
         }
+        int requested_entries = atoi(input->cmd_one[1]); //
         if (input->cmd_one[1][0] != '-') {
-            printf("Wrong usage of hist. Usage hist [-t,f,a]\n");
-            return 0;
-        } else if ((strcmp(input->cmd_one[1], "-t")) == 0) {
-            print_history(1, DEFAULT_COUNT);
-        } else if ((strcmp(input->cmd_one[1], "-f")) == 0) {
-            print_history(0, DEFAULT_COUNT);
-        } else if ((strcmp(input->cmd_one[1], "-a")) == 0) {
-            print_history(-1, history->size);
+            if (requested_entries != 0) {
+                print_history(-1, requested_entries);
+            } else {
+                warn("Wrong usage of hist. Usage hist [-t,f,a]\n");
+                return 0;
+            }
+        } else {
+            if (input->cmd_one[2] != NULL) {
+                requested_entries = atoi(input->cmd_one[2]);
+                if (requested_entries == 0) {
+                    warn("Invalid entries count.");
+                    return 0;
+                }
+            } else {
+                requested_entries = DEFAULT_COUNT;
+            }
+            if ((strcmp(input->cmd_one[1], "-t")) == 0) {
+                print_history(1, requested_entries);
+            } else if ((strcmp(input->cmd_one[1], "-f")) == 0) {
+                print_history(0, requested_entries);
+            } else if ((strcmp(input->cmd_one[1], "-a")) == 0) {
+                print_history(-1, history->size);
+            }
         }
     }
     return 1;
@@ -71,7 +87,7 @@ void print_history(int executed, int size)
         items = size;
     }
     struct Node *curr = history->head;
-    while (curr != NULL && items != 0) {
+    while (curr != NULL && items >= 0) {
         LOGGER("print_history", curr->cmd_one[0]);
         if (executed == curr->executed || executed == -1) {
             if (curr->executed == 0) {
@@ -87,6 +103,7 @@ void print_history(int executed, int size)
                 }
             }
             if (curr->no_commands == 2) {
+                LOGGER("print_history", "on second command");
                 printf(" | %s", curr->cmd_two[0]);
                 for (int i = 1; i < MAX_INPUT_COUNT && curr->cmd_two[i] != NULL; i++) {
                     printf("%s", curr->cmd_two[i]);
@@ -98,8 +115,10 @@ void print_history(int executed, int size)
             printf("\n");
         }
         curr = curr->next;
-        items--;
+        items = items - 1;
     }
+    free(curr);
+    LOGGER("print_history()", "printing done");
 }
 
 struct Node *create_node(struct Input *input, int executed)

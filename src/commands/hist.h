@@ -1,8 +1,9 @@
 /*
- *  hist [FLAG], effect varies due to following options:
+ *  hist (FLAG) (NUMBER), effect varies due to following options:
  *      -a => Lists all previous commands
  *      -t => Lists only correctly executed commands
  *      -f => Lists only wrongly executed commands
+ *      NUMBER => optional integer for desired amount of entries shown (DEFAULT=5)
  */
 
 #ifndef HIST_H
