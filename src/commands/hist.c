@@ -58,6 +58,7 @@ void hist_add(struct Input *input, int executed)
         LOGGER("History", "Error creating node!");
         return;
     }
+    newNode->number = history->size + 1;
     if (history->size == 0) {
         history->head = newNode;
         history->tail = newNode;
@@ -87,7 +88,7 @@ void print_history(int executed, int size)
         items = size;
     }
     struct Node *curr = history->head;
-    while (curr != NULL && items >= 0) {
+    while (curr != NULL && items > 0) {
         LOGGER("print_history", curr->cmd_one[0]);
         if (executed == curr->executed || executed == -1) {
             if (curr->executed == 0) {
@@ -113,9 +114,9 @@ void print_history(int executed, int size)
                 }
             }
             printf("\n");
+            items = items - 1;
         }
         curr = curr->next;
-        items = items - 1;
     }
     free(curr);
     LOGGER("print_history()", "printing done");
@@ -159,7 +160,6 @@ struct Node *create_node(struct Input *input, int executed)
     node->executed = executed;
     node->next = NULL;
     node->prev = NULL;
-    node->number = history->size + 1;
     return node;
 }
 

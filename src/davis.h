@@ -7,7 +7,7 @@
 #define MAX_ARG_LENGTH      64
 #define MAX_INPUT_COUNT     30
 #define MAX_CMD_COUNT       2
-#define LOGGING             1 // 1 = enabling logging statements
+#define LOGGING             0 // 1 = enabling logging statements
 #define SCRATCH_FILE        "./shared-file"
 #define FAILURE             0
 #define SUCCESS             1
