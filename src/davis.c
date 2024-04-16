@@ -58,7 +58,6 @@ void get_input() {
         return;
     }
     input[strcspn(input, "\n")] = '\0';
-
     // -----
     in = (struct Input *)malloc(sizeof(struct Input));
     if (in == NULL) {

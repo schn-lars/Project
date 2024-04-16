@@ -44,5 +44,6 @@ void set_executed(int executed);
 int initialize_history();
 void print_red(int number);
 void print_green(int number);
+void free_tree();
 
 #endif

@@ -10,7 +10,7 @@ int hist(struct Input *input)
     } else {
         if (input->cmd_one[1] == NULL) {
             print_history(-1, DEFAULT_COUNT);
-            return 1;
+            return SUCCESS;
         }
         int requested_entries = atoi(input->cmd_one[1]); //
         if (input->cmd_one[1][0] != '-') {
@@ -18,14 +18,14 @@ int hist(struct Input *input)
                 print_history(-1, requested_entries);
             } else {
                 warn("Wrong usage of hist. Usage hist [-t,f,a]\n");
-                return 0;
+                return FAILURE;
             }
         } else {
             if (input->cmd_one[2] != NULL) {
                 requested_entries = atoi(input->cmd_one[2]);
                 if (requested_entries == 0) {
                     warn("Invalid entries count.");
-                    return 0;
+                    return FAILURE;
                 }
             } else {
                 requested_entries = DEFAULT_COUNT;
@@ -35,11 +35,11 @@ int hist(struct Input *input)
             } else if ((strcmp(input->cmd_one[1], "-f")) == 0) {
                 print_history(0, requested_entries);
             } else if ((strcmp(input->cmd_one[1], "-a")) == 0) {
-                print_history(-1, history->size);
+                print_history(-1, requested_entries);
             }
         }
     }
-    return 1;
+    return SUCCESS;
 }
 
 int initialize_history()
@@ -58,14 +58,15 @@ void hist_add(struct Input *input, int executed)
         LOGGER("History", "Error creating node!");
         return;
     }
-    newNode->number = history->size + 1;
     if (history->size == 0) {
         history->head = newNode;
         history->tail = newNode;
+        newNode->number = 1;
     } else {
         newNode->next = history->head;
         history->head->prev = newNode;
         history->head = newNode;
+        newNode->number = history->size + 1;
     }
     history->size+=1;
 }
@@ -116,6 +117,7 @@ void print_history(int executed, int size)
             printf("\n");
             items = items - 1;
         }
+        printf("Curr Number: %d\n", curr->number);
         curr = curr->next;
     }
     free(curr);
@@ -160,6 +162,7 @@ struct Node *create_node(struct Input *input, int executed)
     node->executed = executed;
     node->next = NULL;
     node->prev = NULL;
+    node->number = 0;
     return node;
 }
 
