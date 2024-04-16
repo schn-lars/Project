@@ -220,6 +220,9 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "clear") == 0) {
             LOGGER("Calling clear: ", in->cmd_one[0]);
             executed = clear();
+        } else if (strcmp(in->cmd_one[0], "plot") == 0) {
+            LOGGER("Calling plot: ", in->cmd_one[0]);
+            executed = plot(in->cmd_one);
         } else if (strcmp(in->cmd_one[0], "hist") == 0) {
             LOGGER("Calling hist: ", in->cmd_one[0]);
             executed = hist(in);

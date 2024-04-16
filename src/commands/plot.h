@@ -8,6 +8,6 @@
 #define PLOT_H
 #include "../davis.h"
 
-void plot();
+int plot(char **args);
 
 #endif
