@@ -11,10 +11,17 @@ Today I worked on finishing our parsing algorithm in order to be able to execute
 Now our shell parses the input to some pattern as follows:
 [First word] [every input word starting with "-" concatenated removing redunant "-"'s] [rest of words, ...]
 
-Additionally I implemented the "hist" command which displays the latest commands executed. For this command I added
+Additionally, I implemented the "hist" command which displays the latest commands executed. For this command I added
 the flags "-a" (all executed commands), "-t" (correctly executed commands) and "-f" (failed commands).
 Where with the last two commands we see a maximum of five entries. Moreover I added some color to indicate,
 whether a command was executed successfully or not. The data structure behind this command is a doubly linked list.
-I made it double, in case we need ii for future addons, such as traversing past commands using the arrow-keys on your keyboard.
+I made it double, in case we need it for future addons, such as traversing past commands using the arrow-keys on your keyboard.
 
 Sunday, 14.04.2024: - Lars
+I reworked the history command and extended its functionalities. We now set a default amount of elements which are
+getting printed. Moreover, I made it clearer on how you can use this command.
+
+Tuesday, 16.04.2024: - Lars
+Today I seem to have fixed the issue, where you could not print out larger amount of ndoes. In order to fix that,
+I added mutexlocks to regulate the access to the linked list itself, because there seem to be some intersecting usages
+among our program.
