@@ -1,6 +1,7 @@
 #include "hist.h"
 
-static struct History *history;
+struct History *history;
+pthread_mutex_t history_mutex;
 
 int hist(struct Input *input)
 {
@@ -44,14 +45,23 @@ int hist(struct Input *input)
 
 int initialize_history()
 {
-    if ((history = malloc(sizeof(struct History)))) {
-        return 0;
+    if (pthread_mutex_init(&history_mutex, NULL) != 0) {
+        warn("History-Mutex initialization failed.");
+        return FAILURE;
     }
-    return 1;
+
+    if ((history = malloc(sizeof(struct History))) == 0) {
+        return FAILURE;
+    }
+    history->size = 0;
+    history->head = NULL;
+    history->tail = NULL;
+    return SUCCESS;
 }
 
 void hist_add(struct Input *input, int executed)
 {
+    pthread_mutex_lock(&history_mutex);
     struct Node *newNode = create_node(input, executed);
     LOGGER("hist_add()", "created new Node");
     if (newNode == NULL) {
@@ -69,6 +79,7 @@ void hist_add(struct Input *input, int executed)
         newNode->number = history->size + 1;
     }
     history->size+=1;
+    pthread_mutex_unlock(&history_mutex);
 }
 
 void traverse_hist(int direction)
@@ -81,6 +92,7 @@ void traverse_hist(int direction)
  */
 void print_history(int executed, int size)
 {
+    pthread_mutex_lock(&history_mutex);
     LOGGER("print_history()", "start");
     int items = 0;
     if (history->size < size) {
@@ -120,8 +132,8 @@ void print_history(int executed, int size)
         printf("Curr Number: %d\n", curr->number);
         curr = curr->next;
     }
-    free(curr);
     LOGGER("print_history()", "printing done");
+    pthread_mutex_unlock(&history_mutex);
 }
 
 struct Node *create_node(struct Input *input, int executed)

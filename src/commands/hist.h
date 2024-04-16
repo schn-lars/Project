@@ -18,6 +18,7 @@
 #define RESET_COLOR        "\x1b[0m"
 
 #include "../davis.h"
+#include <pthread.h>
 
 struct Node {
     struct Node *prev;

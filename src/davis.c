@@ -23,7 +23,10 @@ int main()
     printf("░▒▓███████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░    ░▒▓██▓▒░    ░▒▓█▓▒░ ░▒▓███████▓▒░  \n");
     printf("\n");
     // Opening shell.
-    initialize_history();
+    if (initialize_history() == FAILURE) {
+        warn("Could not initialize history.");
+        return FAILURE;
+    }
     davis();
 
     return 0;
