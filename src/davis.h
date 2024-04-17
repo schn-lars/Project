@@ -7,7 +7,7 @@
 #define MAX_ARG_LENGTH      64
 #define MAX_INPUT_COUNT     30
 #define MAX_CMD_COUNT       2
-#define LOGGING             1 // 1 = enabling logging statements
+#define LOGGING             0 // 1 = enabling logging statements
 #define SCRATCH_FILE        "./shared-file"
 #define FAILURE             0
 #define SUCCESS             1
@@ -18,12 +18,14 @@ struct Input {
     int no_commands;
 };
 
+
 #include "commands/quit.h"
 #include "commands/ls.h"
 #include "commands/help.h"
 #include "commands/clear.h"
 #include "commands/plot.h"
 #include "commands/hist.h"
+#include "commands/wordle.h"
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -50,5 +52,6 @@ void sort_flags_in_arguments(char **parsed_input);
 void print_arguments();
 void put_flags_first(char **chained_up_flags);
 void clear_input_struct();
+void print_davis();
 
 #endif

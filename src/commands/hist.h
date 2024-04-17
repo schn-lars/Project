@@ -16,6 +16,7 @@
 #define STYLE_ITALIC       "\x1b[3m"
 #define STYLE_UNDERLINE    "\x1b[4m"
 #define RESET_COLOR        "\x1b[0m"
+#define COLOR_YELLOW       "\x1b[33m"
 
 #include "../davis.h"
 #include <pthread.h>
