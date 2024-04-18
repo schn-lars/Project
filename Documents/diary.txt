@@ -25,3 +25,10 @@ Tuesday, 16.04.2024: - Lars
 Today I seem to have fixed the issue, where you could not print out larger amount of ndoes. In order to fix that,
 I added mutexlocks to regulate the access to the linked list itself, because there seem to be some intersecting usages
 among our program.
+
+Thursday, 18.04.2024: - Lars
+I finalized the implementation of our embedded minigame 'Wordle'. Now it offeres the possibility to use hints to uncover
+either a correct letter at a correct position, or a letter which is in the word, but not necessariliy at the correct position.
+The usage of the hints is connected to the small amount of points. We set the amount to 200 and 130 respectively.
+In order to gain points to be able to afford such a hint, is to firstly use the shell by executing commands or to play 'Wordle'.
+Depending on how "complicated" the command is, you receive more points. But be aware, playing 'Wordle' is free :)

@@ -171,23 +171,22 @@ void get_word()
 void put_input_into_game()
 {
     LOGGER("put_input_into_game()", "start");
+    for (int k = 0;k < WORD_LENGTH; k++) {
+        game[guesses]->word[k]->character = input_word[k];
+        game[guesses]->word[k]->correct = 0;
+        player_purse->points += 1;
+    }
     for (int i = 0; i < WORD_LENGTH; i++) {
         if (input_word[i] == solution[i]) {
-            game[guesses]->word[i]->character = input_word[i];
             game[guesses]->word[i]->correct = 2;
             player_purse->points += 10;
         } else {
             for (int j = 0; j < WORD_LENGTH; j++) {
                 if (input_word[i] == solution[j]) { // is character part of the solution?
-                    game[guesses]->word[i]->character = input_word[i];
                     game[guesses]->word[i]->correct = 1;
                     player_purse->points += 5;
+                    break;
                 }
-            }
-            if (game[guesses]->word[i]->character == '\0') {
-                game[guesses]->word[i]->character = input_word[i];
-                game[guesses]->word[i]->correct = 0;
-                player_purse->points += 1;
             }
         }
     }
@@ -262,12 +261,12 @@ void hint_semi()
     do {
         charIndex = rand() % WORD_LENGTH;
     } while (game[max(guesses-1, 0)]->word[charIndex]->correct != 0 && charIndex == index);
-    if (game[max(guesses-1,0)]->word[index]->character == solution[charIndex]) {
+    game[max(0, guesses - 1)]->word[index]->character = solution[charIndex];
+    if (game[max(guesses-1,0)]->word[index]->character == solution[index]) {
         game[max(guesses-1,0)]->word[index]->correct = 2;
     } else {
         game[max(guesses-1,0)]->word[index]->correct = 1;
     }
-    game[max(guesses-1,0)]->word[index]->character = game[max(guesses-1,0)]->word[charIndex]->character;
     print_game();
 }
 
