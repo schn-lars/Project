@@ -5,11 +5,14 @@ char input_word[MAX_INPUT_BUFFER + 1];
 char solution[WORD_LENGTH + 1];
 int guesses = 0;
 int state = 0;
+struct Purse *player_purse;
 
-int wordle()
+int wordle(struct Purse *purse)
 {
     LOGGER("wordle()" , "start of wordle");
+    player_purse = purse;
     init_word();
+    clear();
     print_game();
     while (state == 0) { // 1 Loss, 2 Victory
         get_word();
@@ -90,6 +93,8 @@ void init_word() {
 void print_game()
 {
     clear();
+    print_help();
+    printf("[WORDLE] You have %d points.\n\n", player_purse->points);
     for (int i = 0; i < WORD_COUNT; i++) {
         for (int j = 0; j < WORD_LENGTH; j++) {
             if (game[i]->word[j]->correct == 1) {
@@ -122,22 +127,42 @@ void get_word()
             state = -1;
             return;
         } else {
-            // Zähle die Anzahl der Wörter in der Eingabe
             int word_count = 0;
             char *token = strtok(input_word, " ");
             while (token != NULL) {
                 word_count++;
                 token = strtok(NULL, " ");
             }
-
-            // Überprüfe, ob die Eingabe gültig ist
-            if (word_count == 2 || (word_count == 1 && strlen(input_word) == 5)) {
+            if ((word_count == 1 && strlen(input_word) == 5) && input_word[0] != '-') {
                 put_input_into_game();
                 set_state();
                 return;
             } else {
-                warn("Invalid input. Please enter two words or a single word with exactly 5 characters.");
-                printf("[WORDLE] ");
+                if (strcmp(input_word, "-help") == 0) {
+                    print_help();
+                } else if (strcmp(input_word, "-true") == 0) {
+                    if (player_purse->points >= 200) {
+                        hint_true();
+                        player_purse->points -= 200;
+                    } else {
+                        printf("Not enough points! You have: %d points.\n", player_purse->points);
+                        printf("[WORDLE] ");
+                    }
+                } else if (strcmp(input_word, "-semi") == 0) {
+                    if (player_purse->points >= 130) {
+                        hint_semi();
+                        player_purse->points -= 130;
+                    } else {
+                        printf("Not enough points! You have: %d points.\n", player_purse->points);
+                        printf("[WORDLE] ");
+                    }
+                } else {
+                    warn("Invalid input. Please enter a command or a single word with exactly 5 characters.");
+                    printf("[WORDLE] ");
+                    return;
+                }
+                set_state();
+                return;
             }
         }
     }
@@ -150,16 +175,19 @@ void put_input_into_game()
         if (input_word[i] == solution[i]) {
             game[guesses]->word[i]->character = input_word[i];
             game[guesses]->word[i]->correct = 2;
+            player_purse->points += 10;
         } else {
             for (int j = 0; j < WORD_LENGTH; j++) {
                 if (input_word[i] == solution[j]) { // is character part of the solution?
                     game[guesses]->word[i]->character = input_word[i];
                     game[guesses]->word[i]->correct = 1;
+                    player_purse->points += 5;
                 }
             }
             if (game[guesses]->word[i]->character == '\0') {
                 game[guesses]->word[i]->character = input_word[i];
                 game[guesses]->word[i]->correct = 0;
+                player_purse->points += 1;
             }
         }
     }
@@ -172,7 +200,7 @@ void set_state()
     LOGGER("set_state()", "start");
     int corr_counter = 0;
     for (int i = 0; i < WORD_LENGTH; i++) {
-        if (game[guesses-1]->word[i]->correct == 2) {
+        if (game[max(guesses-1,0)]->word[i]->correct == 2) {
             corr_counter++;
         }
     }
@@ -187,6 +215,71 @@ void set_state()
     }
     LOGGER("set_state()", "end");
 }
+
+void print_help()
+{
+    printf("Enter '-true' for correct letter and position (200 Points).\n");
+    printf("Enter '-semi' for correct letter clue (130 Points).\n");
+}
+
+void hint_true()
+{
+    LOGGER("hint_true()", "Start");
+    srand(time(NULL));
+    int index = rand() % WORD_LENGTH;
+    while (game[max(guesses-1, 0)]->word[index]->correct == 2) {
+        index = rand() % WORD_LENGTH;
+    }
+    game[max(guesses-1, 0)]->word[index]->character = solution[index];
+    game[max(guesses-1, 0)]->word[index]->correct = 2;
+    LOGGER("hint_true()", "End");
+    print_game();
+}
+
+void hint_semi()
+{
+    int correctChars = 0;
+    int semiChars = 0;
+    for (int i = 0; i < WORD_LENGTH; i++) {
+        if (game[max(guesses-1,0)]->word[i]->correct == 2) {
+            correctChars++;
+        }
+        if (game[max(guesses-1,0)]->word[i]->correct == 1) {
+            semiChars++;
+        }
+    }
+    if (correctChars + semiChars == 5 || correctChars == 4 || semiChars >= 4) {
+        player_purse->points += 130;
+        warn("You can not use this hint right now.");
+        sleep(2);
+        return;
+    }
+    srand(time(NULL));
+    int index, charIndex;
+    do {
+        index = rand() % WORD_LENGTH;
+    } while (game[max(guesses-1, 0)]->word[index]->correct != 0);
+    do {
+        charIndex = rand() % WORD_LENGTH;
+    } while (game[max(guesses-1, 0)]->word[charIndex]->correct != 0 && charIndex == index);
+    if (game[max(guesses-1,0)]->word[index]->character == solution[charIndex]) {
+        game[max(guesses-1,0)]->word[index]->correct = 2;
+    } else {
+        game[max(guesses-1,0)]->word[index]->correct = 1;
+    }
+    game[max(guesses-1,0)]->word[index]->character = game[max(guesses-1,0)]->word[charIndex]->character;
+    print_game();
+}
+
+int max(int a, int b)
+{
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 
 
 

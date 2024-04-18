@@ -13,6 +13,7 @@
 #define WORDLE_H
 
 #include <time.h>
+#include "../davis.h"
 
 #define WORD_LENGTH     5
 #define WORD_COUNT      6
@@ -28,13 +29,17 @@ struct Char {
     int correct; // 0 not in word, 1 letter exists, 2 correct position
 };
 
-#include "../davis.h"
 
-int wordle();
+
+int wordle(struct Purse *purse);
 void init_word();
 void print_game();
 void get_word();
 void put_input_into_game();
 void set_state();
+void print_help();
+void hint_true();
+void hint_semi();
+int max(int a, int b);
 
 #endif

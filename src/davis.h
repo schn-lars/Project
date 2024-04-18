@@ -7,7 +7,7 @@
 #define MAX_ARG_LENGTH      64
 #define MAX_INPUT_COUNT     30
 #define MAX_CMD_COUNT       2
-#define LOGGING             0 // 1 = enabling logging statements
+#define LOGGING             1 // 1 = enabling logging statements
 #define SCRATCH_FILE        "./shared-file"
 #define FAILURE             0
 #define SUCCESS             1
@@ -18,6 +18,9 @@ struct Input {
     int no_commands;
 };
 
+struct Purse {
+    int points;
+};
 
 #include "commands/quit.h"
 #include "commands/ls.h"
@@ -37,8 +40,6 @@ struct Input {
 
 
 extern int shell_running;
-
-
 
 void davis();
 void get_input();

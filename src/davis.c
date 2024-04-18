@@ -6,6 +6,7 @@
 
 char input[MAX_INPUT_BUFFER];
 struct Input *in;
+struct Purse *purse;
 int second_cmd_procedure;
 int no_command = 0;
 int input_length;
@@ -16,12 +17,15 @@ int main()
 {
     print_davis();
     // Opening shell.
+    if ((purse = malloc(sizeof(struct Purse))) == 0) {
+        warn("Could not initialize purse.");
+        return FAILURE;
+    }
     if (initialize_history() == FAILURE) {
         warn("Could not initialize history.");
         return FAILURE;
     }
     davis();
-
     return 0;
 }
 
@@ -29,6 +33,7 @@ void davis()
 {
     // TODO vielleicht eine grafische Fläche zu Beginn
     printf("Hey, I'm DAVIS. How may I assist You?\n");
+    purse->points = 10000;
     shell_running = 1;
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
@@ -233,7 +238,11 @@ void exec_command() {
             executed = hist(in);
         } else if (strcmp(in->cmd_one[0], "wordle") == 0) {
             LOGGER("Calling wordle: ", in->cmd_one[0]);
-            executed = wordle();
+            executed = wordle(purse);
+        } else if (strcmp(in->cmd_one[0], "points") == 0) {
+            LOGGER("Calling points: ", in->cmd_one[0]);
+            printf("Your points: %d\n", purse->points);
+            executed = 1;
         } else {
             LOGGER("exe_command()","System command executing ...");
             pid_t sys_cmd = fork();
@@ -251,6 +260,7 @@ void exec_command() {
             }
         }
     }
+    purse->points += (no_command + executed) * MAX_INPUT_COUNT;
     hist_add(in, executed);
     clear_input_struct();
 }
