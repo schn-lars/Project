@@ -129,7 +129,6 @@ void print_history(int executed, int size)
             printf("\n");
             items = items - 1;
         }
-        printf("Curr Number: %d\n", curr->number);
         curr = curr->next;
     }
     LOGGER("print_history()", "printing done");

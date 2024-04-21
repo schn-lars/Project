@@ -8,10 +8,7 @@ char input[MAX_INPUT_BUFFER];
 struct Input *in;
 struct Purse *purse;
 int second_cmd_procedure;
-int no_command = 0;
-int input_length;
 int shell_running = 1;
-char *log_msg;
 
 int main()
 {
@@ -159,7 +156,7 @@ void parse_input_into_commands() {
  */
 void exec_command() {
     LOGGER("starting in exec_command()",in->cmd_one[0]);
-    int executed = 0;
+    int executed = 1;
     if (in == NULL || in->cmd_one[0] == NULL) {
         warn("Please enter a valid input.");
         return;
@@ -275,7 +272,6 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "points") == 0) {
             LOGGER("Calling points: ", in->cmd_one[0]);
             printf("Your points: %d\n", purse->points);
-            executed = 1;
         } else {
             LOGGER("exe_command()","System command executing ...");
             pid_t sys_cmd = fork();
@@ -296,15 +292,9 @@ void exec_command() {
             }
         }
     }
-    purse->points += (no_command + executed) * MAX_INPUT_COUNT;
-    if (no_command == 2) {
-        if (shm_exe_ptr[0] == 1) {
-            executed = 1;
-        }
-    } else {
-        if (executed == 0) {
-            executed = shm_exe_ptr[0];
-        }
+    purse->points += (in->no_commands + executed) * MAX_INPUT_COUNT;
+    if (!(executed == 1 && shm_exe_ptr[0] == 1)) {
+        executed = 0;
     }
     hist_add(in, executed);
     if (munmap(shm_ptr, sizeof(int)) == -1) {

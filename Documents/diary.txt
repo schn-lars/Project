@@ -38,4 +38,4 @@ Today I managed to add shared memory into the command execution section of our s
 of a command's execution in our history, but not yet properly and correct for system commands such as piped ones or
 commands which are not built ins. The concept now enables the child process to overwrite a shared memroy integer,
 in case something goes south with any command. We do not care why something did not execute. It just simply did not execute,
-therefore we set the variable accordingly.
+therefore we set the variable accordingly. Moreover, I fixed some bugs.

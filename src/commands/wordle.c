@@ -6,8 +6,6 @@ char solution[WORD_LENGTH + 1];
 int guesses = 0;
 int state = 0;
 struct Purse *player_purse;
-pthread_t print_thread, fetch_thread;
-pthread_mutex_t wordle_mutex;
 
 int wordle(struct Purse *purse)
 {
@@ -16,6 +14,7 @@ int wordle(struct Purse *purse)
     init_word();
     clear();
     print_game();
+
     while (state == 0) { // 1 Loss, 2 Victory
         get_word();
     }
@@ -25,13 +24,19 @@ int wordle(struct Purse *purse)
         printf(" Better luck next time. The word was: ");
         printf(COLOR_RED "%s.\n" RESET_COLOR, solution);
         sleep(5);
+        clear();
+        print_davis();
+        return FAILURE;
     } else if (state == 2) {
         printf("[WORDLE]" COLOR_GREEN  " You won!\n"   RESET_COLOR);
         sleep(5);
+        clear();
+        print_davis();
+        return SUCCESS;
     }
     clear();
     print_davis();
-    return SUCCESS;
+    return FAILURE;
 }
 
 void init_word() {
@@ -280,23 +285,3 @@ int max(int a, int b)
         return b;
     }
 }
-
-int init_threads()
-{
-    pthread_create(&print_thread, NULL, (void *)print_game, NULL);
-    pthread_create(&fetch_thread, NULL, (void *)get_word, NULL);
-    pthread_mutex_init(&wordle_mutex, NULL);
-    return SUCCESS;
-}
-
-int terminate_threads()
-{
-    pthread_join(fetch_thread, NULL);
-    pthread_join(print_thread, NULL);
-    pthread_mutex_destroy(&wordle_mutex);
-    return SUCCESS;
-}
-
-
-
-

@@ -42,10 +42,4 @@ void hint_true();
 void hint_semi();
 int max(int a, int b);
 
-// TODO THREADS
-int init_threads();
-void *fetch_input();
-void *print_word();
-int terminate_threads();
-
 #endif
