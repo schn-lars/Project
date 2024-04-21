@@ -14,6 +14,8 @@
 
 #include <time.h>
 #include "../davis.h"
+#include "pthread.h"
+#include <unistd.h>
 
 #define WORD_LENGTH     5
 #define WORD_COUNT      6
@@ -29,8 +31,6 @@ struct Char {
     int correct; // 0 not in word, 1 letter exists, 2 correct position
 };
 
-
-
 int wordle(struct Purse *purse);
 void init_word();
 void print_game();
@@ -41,5 +41,11 @@ void print_help();
 void hint_true();
 void hint_semi();
 int max(int a, int b);
+
+// TODO THREADS
+int init_threads();
+void *fetch_input();
+void *print_word();
+int terminate_threads();
 
 #endif

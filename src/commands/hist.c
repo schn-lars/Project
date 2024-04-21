@@ -200,3 +200,31 @@ void print_green(int number)
 {
     printf(COLOR_GREEN   "[%d]"   RESET_COLOR, number);
 }
+
+void free_tree()
+{
+    LOGGER("free_tree", "start");
+    if (history->size == 0) {
+        return;
+    } else {
+        int counter = 0;
+        struct Node *curr = history->head;
+        while (curr != NULL) {
+            counter++;
+            for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+                if (curr->cmd_one[i] != NULL) {
+                    free(curr->cmd_one[i]);
+                }
+                if (curr->cmd_two[i] != NULL) {
+                    free(curr->cmd_two[i]);
+                }
+            }
+            struct Node *curr_next = curr->next;
+            free(curr);
+            curr = curr_next;
+        }
+        printf("Deleted %d nodes.\n", counter);
+    }
+    free(history);
+    LOGGER("free_tree", "End");
+}

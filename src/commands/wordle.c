@@ -6,6 +6,8 @@ char solution[WORD_LENGTH + 1];
 int guesses = 0;
 int state = 0;
 struct Purse *player_purse;
+pthread_t print_thread, fetch_thread;
+pthread_mutex_t wordle_mutex;
 
 int wordle(struct Purse *purse)
 {
@@ -277,6 +279,22 @@ int max(int a, int b)
     } else {
         return b;
     }
+}
+
+int init_threads()
+{
+    pthread_create(&print_thread, NULL, (void *)print_game, NULL);
+    pthread_create(&fetch_thread, NULL, (void *)get_word, NULL);
+    pthread_mutex_init(&wordle_mutex, NULL);
+    return SUCCESS;
+}
+
+int terminate_threads()
+{
+    pthread_join(fetch_thread, NULL);
+    pthread_join(print_thread, NULL);
+    pthread_mutex_destroy(&wordle_mutex);
+    return SUCCESS;
 }
 
 

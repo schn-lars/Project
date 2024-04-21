@@ -47,6 +47,7 @@ void davis()
         print_arguments();
         exec_command();
     }
+    end_davis();
 }
 
 void print_davis()
@@ -163,6 +164,33 @@ void exec_command() {
         warn("Please enter a valid input.");
         return;
     }
+
+    printf("Before shm_open...\n");
+    int shm_fd = shm_open(SCRATCH_FILE, O_CREAT | O_RDWR, 0666);
+    if (shm_fd < 0) {
+        perror("shm_fd");
+        return;
+    }
+
+    printf("Before ftruncate...\n");
+    if (ftruncate(shm_fd, sizeof(int)) < 0) {
+        perror("ftruncate");
+        return;
+    }
+
+    printf("Before mmap...\n");
+    void* shm_ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shm_ptr == MAP_FAILED) {
+        perror("mmap");
+        return;
+    }
+
+    printf("Before setting shm_exe_ptr...\n");
+    int* shm_exe_ptr = (int*)shm_ptr;
+    shm_exe_ptr[0] = 0;
+
+    printf("Now going into ifs...\n");
+
     if (in->no_commands == 2) { // Piping
         LOGGER("Piping: ","Start");
         // command 0 is being executed first.
@@ -170,6 +198,7 @@ void exec_command() {
         pid_t p1, p2;
         if (pipe(fd) < 0) {
             warn("Couldn't perform piped command.");
+            executed = FAILURE;
             return;
         }
         p1 = fork();
@@ -184,18 +213,24 @@ void exec_command() {
             close(fd[0]);
             dup2(fd[1], STDOUT_FILENO);
             close(fd[1]);
+
+            printf("first command doing...\n");
             if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                 warn("First command failed.");
                 printf("%s", in->cmd_one[0]);
                 exit(0);
             } else {
-                exit(0);
+                printf("First command done\n");
+                shm_exe_ptr[0] += 1;
+                printf("1st command successful: %d\n", shm_exe_ptr[0]);
+                exit(SUCCESS);
             }
         } else {
             p2 = fork();
             if (p2 < 0) {
                 warn("Problem occurred while forking.");
-                hist_add(in, FAILURE);
+                //hist_add(in, FAILURE);
+                executed = FAILURE;
                 return;
             }
             // Child 2 executing...
@@ -204,10 +239,16 @@ void exec_command() {
                 close(fd[1]);
                 dup2(fd[0], STDIN_FILENO);
                 close(fd[0]);
+                LOGGER("2nd command exe ...", "");
+
                 if (execvp(in->cmd_two[0], in->cmd_two) < 0) {
                     warn("Second command failed.");
                     printf("%s", in->cmd_two[0]);
                     exit(0);
+                } else {
+                    shm_exe_ptr[0] += 1;
+                    printf("2nd command successful: %d\n", shm_exe_ptr[0]);
+                    exit(SUCCESS);
                 }
             } else {
                 close(fd[0]); // Close both ends of pipe in parent
@@ -252,8 +293,11 @@ void exec_command() {
             if (sys_cmd == 0) {
                 if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                     warn("Could not execute command.");
-                    // TODO interprocess communication to determine whether command was successful or not
                     exit(0);
+                } else {
+                    printf("System command was successful.\n");
+                    *shm_exe_ptr += 1;
+                    exit(SUCCESS);
                 }
             } else {
                 wait(NULL);
@@ -261,7 +305,23 @@ void exec_command() {
         }
     }
     purse->points += (no_command + executed) * MAX_INPUT_COUNT;
+    printf("shm_exe_ptr finalizing: %d\n", shm_exe_ptr[0]);
+    if (no_command == 2) {
+        if (shm_exe_ptr[0] == 2) {
+            executed = 1;
+        }
+    } else {
+        if (executed == 0) {
+            executed = shm_exe_ptr[0];
+        }
+    }
     hist_add(in, executed);
+    if (munmap(shm_ptr, sizeof(int)) == -1) {
+        perror("munmap");
+        exit(FAILURE);
+    }
+    close(shm_fd);
+    unlink(SCRATCH_FILE);
     clear_input_struct();
 }
 
@@ -436,3 +496,9 @@ void clear_input_struct()
     free(in);
 }
 
+void end_davis()
+{
+    LOGGER("end_davis()", "Start");
+    free_tree();
+    LOGGER("end_davis", "End");
+}
