@@ -32,3 +32,10 @@ either a correct letter at a correct position, or a letter which is in the word,
 The usage of the hints is connected to the small amount of points. We set the amount to 200 and 130 respectively.
 In order to gain points to be able to afford such a hint, is to firstly use the shell by executing commands or to play 'Wordle'.
 Depending on how "complicated" the command is, you receive more points. But be aware, playing 'Wordle' is free :)
+
+Sunday, 21.04.2024: - Lars
+Today I managed to add shared memory into the command execution section of our shell. We are already showing the state
+of a command's execution in our history, but not yet properly and correct for system commands such as piped ones or
+commands which are not built ins. The concept now enables the child process to overwrite a shared memroy integer,
+in case something goes south with any command. We do not care why something did not execute. It just simply did not execute,
+therefore we set the variable accordingly.

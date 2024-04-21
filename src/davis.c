@@ -105,8 +105,8 @@ void parse_input_into_commands() {
         while (*second_half == ' ') { // clear spaces
             second_half++;
         }
-        printf("%s\n", first_half);
-        printf("%s\n", second_half);
+        LOGGER("parse(): first half: ", first_half);
+        LOGGER("parse(): second half: ", second_half);
 
         char *tmp = strtok_r(first_half, " ", &saveptr);
         while (tmp != NULL) {
@@ -165,31 +165,25 @@ void exec_command() {
         return;
     }
 
-    printf("Before shm_open...\n");
     int shm_fd = shm_open(SCRATCH_FILE, O_CREAT | O_RDWR, 0666);
     if (shm_fd < 0) {
         perror("shm_fd");
         return;
     }
 
-    printf("Before ftruncate...\n");
     if (ftruncate(shm_fd, sizeof(int)) < 0) {
         perror("ftruncate");
         return;
     }
 
-    printf("Before mmap...\n");
     void* shm_ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED) {
         perror("mmap");
         return;
     }
 
-    printf("Before setting shm_exe_ptr...\n");
     int* shm_exe_ptr = (int*)shm_ptr;
-    shm_exe_ptr[0] = 0;
-
-    printf("Now going into ifs...\n");
+    shm_exe_ptr[0] = 1;
 
     if (in->no_commands == 2) { // Piping
         LOGGER("Piping: ","Start");
@@ -214,15 +208,14 @@ void exec_command() {
             dup2(fd[1], STDOUT_FILENO);
             close(fd[1]);
 
-            printf("first command doing...\n");
+            LOGGER("execute()","first command doing...");
             if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                 warn("First command failed.");
-                printf("%s", in->cmd_one[0]);
+                printf("Fail %s", in->cmd_one[0]);
+                *shm_exe_ptr = 0;
                 exit(0);
             } else {
-                printf("First command done\n");
-                shm_exe_ptr[0] += 1;
-                printf("1st command successful: %d\n", shm_exe_ptr[0]);
+                LOGGER("execute_cmd()", "First command done\n");
                 exit(SUCCESS);
             }
         } else {
@@ -240,13 +233,12 @@ void exec_command() {
                 dup2(fd[0], STDIN_FILENO);
                 close(fd[0]);
                 LOGGER("2nd command exe ...", "");
-
                 if (execvp(in->cmd_two[0], in->cmd_two) < 0) {
                     warn("Second command failed.");
-                    printf("%s", in->cmd_two[0]);
+                    printf("Fail %s", in->cmd_two[0]);
+                    *shm_exe_ptr = 0;
                     exit(0);
                 } else {
-                    shm_exe_ptr[0] += 1;
                     printf("2nd command successful: %d\n", shm_exe_ptr[0]);
                     exit(SUCCESS);
                 }
@@ -305,9 +297,8 @@ void exec_command() {
         }
     }
     purse->points += (no_command + executed) * MAX_INPUT_COUNT;
-    printf("shm_exe_ptr finalizing: %d\n", shm_exe_ptr[0]);
     if (no_command == 2) {
-        if (shm_exe_ptr[0] == 2) {
+        if (shm_exe_ptr[0] == 1) {
             executed = 1;
         }
     } else {
