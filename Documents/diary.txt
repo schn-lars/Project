@@ -6,6 +6,15 @@ Work im progress:
 
 Schedule:
 
+Thursday, 28.03.2024: - Lars & Mirco
+Started with the presentation (PowerPoint) for the 04.04.2024. Worked on scheduling.
+
+Thursday, 04.04.2024: - Mirco
+Researched commands and utalization of gnuplot and experimented with it. Prepared plot for using it later.
+
+Friday, 12.04.2024: Mirco
+Prepared a LaTeX file for the report.
+
 Saturday, 13.04.2024: - Lars
 Today I worked on finishing our parsing algorithm in order to be able to execute commands properly.
 Now our shell parses the input to some pattern as follows:
@@ -18,6 +27,10 @@ whether a command was executed successfully or not. The data structure behind th
 I made it double, in case we need it for future addons, such as traversing past commands using the arrow-keys on your keyboard.
 
 Sunday, 14.04.2024: - Lars
+
+Tuesday, 16.04.2024: Mirco
+Achieved to make gnuplot work over the DAVIS-shell. It can now plot graphs with an input file from the users PC or the repository.
+I will now work on a settings file and some flags, so the user can customize the graphs.
 I reworked the history command and extended its functionalities. We now set a default amount of elements which are
 getting printed. Moreover, I made it clearer on how you can use this command.
 
@@ -39,3 +52,18 @@ of a command's execution in our history, but not yet properly and correct for sy
 commands which are not built ins. The concept now enables the child process to overwrite a shared memroy integer,
 in case something goes south with any command. We do not care why something did not execute. It just simply did not execute,
 therefore we set the variable accordingly. Moreover, I fixed some bugs.
+
+Friday, 26.04.2024: Mirco
+I tried solving the problem with the paths for the plotting. It will accept either a path or a function written directly (e.g. sin(x)).
+I tried handling the error with stat() to see if it is a path or not, but it will always tell me that it is not. I experimented with
+multiple diffrent inputs but still the same result.
+
+Saturday 27.04.2024: Mirco
+Replaced stat() with acceess() to check if path exists. But it doesn't work either. Researched further to find another way.
+
+Monday 29.04.2024: Mirco
+I finally achieved to check the paths correctly. We have three cases:
+- a path without '' or "" -> print with '' to gnuplot
+- a path with '' or with "" -> print as is to gnuplot
+- a direct function/no existing path -> print as is to gnuplot
+Now we have to decide which settings we want as default.
