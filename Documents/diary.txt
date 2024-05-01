@@ -67,3 +67,10 @@ I finally achieved to check the paths correctly. We have three cases:
 - a path with '' or with "" -> print as is to gnuplot
 - a direct function/no existing path -> print as is to gnuplot
 Now we have to decide which settings we want as default.
+
+Wednesday 01.05.2024: Lars
+I am still trying to figure out, why with "ls -a" the folder ".." is being displayed twice.
+I seem to have introduced this bug after adding the readable flag to it and the formatting for the "-l".
+Additionally, I did some research regarding registring special keystrokes such as the arrow keys, which we want,
+to traverse the history in classical shell manner. This is going to be a bit of a rough patch, as it introduces new levels of problems,
+which are multithreaded access to the standard input, which is not good. However, I am still working on that.

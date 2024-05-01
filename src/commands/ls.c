@@ -47,11 +47,11 @@ int ls(char **args) // l = 1, a = 2, al = 3
     if (strchr(flag, 'r') != NULL) {
         readable = 1;
     }
-    set_longest_name(directory_content);
+    set_longest_name(directory_content, directory_entry);
     if (strchr(flag, 'l') != NULL) {
         display_list_header();
     }
-    do {
+    while (directory_entry != NULL) {
         struct stat *file_stat = malloc(sizeof(struct stat));
         if (stat(directory_entry->d_name, file_stat) == -1) {
             perror("stat");
@@ -63,24 +63,26 @@ int ls(char **args) // l = 1, a = 2, al = 3
                 display_as_list(file_stat, directory_entry);
             } else if (strchr(flag, 'a') != NULL && strchr(flag, 'l') == NULL) {
                 LOGGER("ls() in a", directory_entry->d_name);
-                printf("%s\t", directory_entry->d_name);
+                print_regular(directory_entry, file_stat);
             }
         } else {
             if (strchr(flag, 'l') != NULL) {
                 display_as_list(file_stat, directory_entry);
             } else {
-                printf("%s\t", directory_entry->d_name);
+                print_regular(directory_entry, file_stat);
             }
         }
         free(file_stat);
         LOGGER("Now assigning new dirent: ", directory_entry->d_name);
-    } while ((directory_entry = readdir(directory_content)) != NULL);
+        directory_entry = readdir(directory_content);
+    }
     printf("\n");
     readable = 0;
     file_name_size = 0;
     file_type_size = 0;
     free(directory_entry);
     free(flag);
+    closedir(directory_content);
     return 1;
 }
 
@@ -132,22 +134,23 @@ void display_as_list(struct stat *stat_file, struct dirent *entry)
     }
 }
 
-void set_longest_name(DIR *directory_content)
+void set_longest_name(DIR *directory_content, struct dirent *directory_entry)
 {
-    struct dirent *dirent;
-    rewinddir(directory_content);
-    while ((dirent = readdir(directory_content)) != NULL) {
-        int tmp_len = strlen(dirent->d_name);
-        int temp_type_len = strlen(get_type(dirent->d_type));
+    while (directory_entry != NULL) {
+        int tmp_len = strlen(directory_entry->d_name);
+        int temp_type_len = strlen(get_type(directory_entry->d_type));
         if (tmp_len > file_name_size) {
             file_name_size = tmp_len;
         }
         if (temp_type_len > file_type_size) {
             file_type_size = temp_type_len;
         }
+        directory_entry = readdir(directory_content);
     }
-    file_name_size += 2;
     rewinddir(directory_content);
+    file_name_size += 1;
+    file_type_size += 1;
+
 }
 
 char *get_type(unsigned char type)
@@ -203,5 +206,17 @@ char *permissions_to_string(mode_t mode)
 
     buf[10] = '\0';
     return buf;
+}
+
+void print_regular(struct dirent *directory_entry, struct stat *file_stat)
+{
+    if (directory_entry->d_type == DT_DIR) { // is it a directory
+        printf("\x1b[34m" "%s  " "\x1b[0m", directory_entry->d_name);
+    } else if (file_stat->st_mode & S_IXUSR || file_stat->st_mode & S_IXGRP || file_stat->st_mode & S_IXOTH) {
+        // executeable
+        printf("\x1b[32m" "%s  " "\x1b[0m", directory_entry->d_name);
+    } else {
+        printf("%s  ", directory_entry->d_name);
+    }
 }
 
