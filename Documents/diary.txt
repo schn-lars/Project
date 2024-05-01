@@ -74,3 +74,7 @@ I seem to have introduced this bug after adding the readable flag to it and the 
 Additionally, I did some research regarding registring special keystrokes such as the arrow keys, which we want,
 to traverse the history in classical shell manner. This is going to be a bit of a rough patch, as it introduces new levels of problems,
 which are multithreaded access to the standard input, which is not good. However, I am still working on that.
+
+Thursday 02.05.2024: Lars
+I fixed the bug I had with the double entry of "..". Although I do not know what I did. But somehow it resolved itself.
+I was just doodeling around and fixed it. Life's great.

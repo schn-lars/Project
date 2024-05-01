@@ -7,7 +7,7 @@ int readable = 0;
 int ls(char **args) // l = 1, a = 2, al = 3
 {
     LOGGER("LS", "");
-    struct dirent *directory_entry = malloc(sizeof(struct dirent));
+    struct dirent *directory_entry;
     char *flag = malloc(MAX_ARG_LENGTH * sizeof(char));
     if (flag == NULL) {
         warn("LS: flag malloc error");
@@ -39,6 +39,7 @@ int ls(char **args) // l = 1, a = 2, al = 3
         }
         return 0;
     }
+
     if ((directory_entry = readdir(directory_content)) == NULL) {
         notify("Your current directory is empty.");
         return 1;
@@ -51,7 +52,8 @@ int ls(char **args) // l = 1, a = 2, al = 3
     if (strchr(flag, 'l') != NULL) {
         display_list_header();
     }
-    while (directory_entry != NULL) {
+
+    while ((directory_entry = readdir(directory_content)) != NULL) {
         struct stat *file_stat = malloc(sizeof(struct stat));
         if (stat(directory_entry->d_name, file_stat) == -1) {
             perror("stat");
@@ -73,18 +75,18 @@ int ls(char **args) // l = 1, a = 2, al = 3
             }
         }
         free(file_stat);
-        LOGGER("Now assigning new dirent: ", directory_entry->d_name);
-        directory_entry = readdir(directory_content);
     }
-    printf("\n");
+    if (strchr(flag, 'l') == NULL) {
+        printf("\n");
+    }
     readable = 0;
     file_name_size = 0;
     file_type_size = 0;
-    free(directory_entry);
     free(flag);
     closedir(directory_content);
     return 1;
 }
+
 
 /**
 *   Creates a title for the command used with -l flag.
