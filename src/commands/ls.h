@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-void set_longest_name(struct dirent *dirent, DIR *directory_content);
+void set_longest_name(DIR *directory_content);
 void display_list_header();
 void display_as_list(struct stat *stat_file, struct dirent *entry); // -l
 char *get_type(unsigned char type);

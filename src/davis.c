@@ -6,6 +6,7 @@
 
 char input[MAX_INPUT_BUFFER];
 struct Input *in;
+pthread_t arrow_thread;
 struct Purse *purse;
 int second_cmd_procedure;
 int shell_running = 1;
@@ -14,10 +15,12 @@ int main()
 {
     print_davis();
     // Opening shell.
+
     if ((purse = malloc(sizeof(struct Purse))) == 0) {
         warn("Could not initialize purse.");
         return FAILURE;
     }
+
     if (initialize_history() == FAILURE) {
         warn("Could not initialize history.");
         return FAILURE;
@@ -480,6 +483,7 @@ void clear_input_struct()
 void end_davis()
 {
     LOGGER("end_davis()", "Start");
+    pthread_join(arrow_thread, NULL);
     free_tree();
     LOGGER("end_davis", "End");
 }

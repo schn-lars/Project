@@ -177,19 +177,6 @@ struct Node *create_node(struct Input *input, int executed)
     return node;
 }
 
-/**
- * Sets the latest node's execution state. Because initially it gets saved to history with executed = 0.
- * @param executed 1 if positive execution (= valid command)
- */
-void set_executed(int executed)
-{
-    if (history->size == 0) {
-        warn("History is empty.");
-    } else {
-        history->head->executed = executed;
-    }
-}
-
 void print_red(int number)
 {
     printf(COLOR_RED   "[%d]"   RESET_COLOR, number);

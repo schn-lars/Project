@@ -1,6 +1,7 @@
 #include "ls.h"
 
-int file_name_size;
+int file_name_size = 0;
+int file_type_size = 0;
 int readable = 0;
 
 int ls(char **args) // l = 1, a = 2, al = 3
@@ -15,11 +16,19 @@ int ls(char **args) // l = 1, a = 2, al = 3
     flag[0] = '\0'; //
     DIR *directory_content;
     if (args[1] != NULL) { // first element is the command itself
-        strcat(flag, args[1]);
         if (args[1][0] == '-') { // if only input is "-" as parameter
-            directory_content = opendir(".");
+            strcpy(flag, args[1]);
+            if (args[2] != NULL) {
+                directory_content = opendir(args[2]);
+            } else {
+                directory_content = opendir(".");
+            }
         } else {
-            directory_content = opendir(args[1]);
+            if (args[2] != NULL) {
+                warn("Wrong usage of ls: ls <-FLAGS> <DIRECTORY>");
+            } else {
+                directory_content = opendir(args[1]);
+            }
         }
     } else {
         directory_content = opendir(".");
@@ -38,9 +47,11 @@ int ls(char **args) // l = 1, a = 2, al = 3
     if (strchr(flag, 'r') != NULL) {
         readable = 1;
     }
-    set_longest_name(directory_entry, directory_content);
-    display_list_header();
-    while (directory_entry != NULL) {
+    set_longest_name(directory_content);
+    if (strchr(flag, 'l') != NULL) {
+        display_list_header();
+    }
+    do {
         struct stat *file_stat = malloc(sizeof(struct stat));
         if (stat(directory_entry->d_name, file_stat) == -1) {
             perror("stat");
@@ -48,8 +59,10 @@ int ls(char **args) // l = 1, a = 2, al = 3
         }
         if (directory_entry->d_name[0] == '.') {
             if (strchr(flag, 'l') != NULL && strchr(flag, 'a') != NULL) {
+                LOGGER("ls() is al", directory_entry->d_name);
                 display_as_list(file_stat, directory_entry);
-            } else if (strchr(flag, 'a') != NULL) {
+            } else if (strchr(flag, 'a') != NULL && strchr(flag, 'l') == NULL) {
+                LOGGER("ls() in a", directory_entry->d_name);
                 printf("%s\t", directory_entry->d_name);
             }
         } else {
@@ -59,10 +72,15 @@ int ls(char **args) // l = 1, a = 2, al = 3
                 printf("%s\t", directory_entry->d_name);
             }
         }
-        directory_entry = readdir(directory_content);
-    }
+        free(file_stat);
+        LOGGER("Now assigning new dirent: ", directory_entry->d_name);
+    } while ((directory_entry = readdir(directory_content)) != NULL);
     printf("\n");
     readable = 0;
+    file_name_size = 0;
+    file_type_size = 0;
+    free(directory_entry);
+    free(flag);
     return 1;
 }
 
@@ -73,9 +91,13 @@ int ls(char **args) // l = 1, a = 2, al = 3
 void display_list_header()
 {
     if (readable == 1) {
-        printf("Header\n");
-    } else {
-        printf("Header\n");
+        printf("\x1b[1m" "%-*s\t%s\t%-*s\t%s\n" "\x1b[0m",
+               file_name_size,
+               "Name",
+               "Size",
+               file_type_size,
+               "Type",
+               "Permissions");
     }
 }
 
@@ -85,18 +107,24 @@ void display_list_header()
  */
 void display_as_list(struct stat *stat_file, struct dirent *entry)
 {
+    if (entry->d_type == DT_DIR) { // is it a directory
+        LOGGER("display_as_list() Folder", entry->d_name);
+        printf("\x1b[34m" "%-*s\t" "\x1b[0m", file_name_size, entry->d_name);
+    } else if (stat_file->st_mode & S_IXUSR || stat_file->st_mode & S_IXGRP || stat_file->st_mode & S_IXOTH) {
+        // executeable
+        printf("\x1b[32m" "%-*s\t" "\x1b[0m", file_name_size, entry->d_name);
+    } else {
+        printf("%-*s\t", file_name_size, entry->d_name);
+    }
     if (readable == 1) {
-        printf("%-*s\t%s\t%-10s\t%s\n",
-               file_name_size,
-               entry->d_name,
-               format_file_size(stat_file->st_size),
+        printf("%s\t%-*s\t%s\n",
+               format_file_size(stat_file->st_size), // calculates size into readable format
+               file_type_size,
                get_type(entry->d_type),
                permissions_to_string(stat_file->st_mode)
                );
     } else {
-        printf("%-*s\t%ld\t%u\t%u\n",
-               file_name_size,
-               entry->d_name,
+        printf("%ld\t%u\t%u\n",
                stat_file->st_size,
                entry->d_type,
                stat_file->st_mode
@@ -104,16 +132,21 @@ void display_as_list(struct stat *stat_file, struct dirent *entry)
     }
 }
 
-void set_longest_name(struct dirent *dirent, DIR *directory_content)
+void set_longest_name(DIR *directory_content)
 {
-    while (dirent != NULL) {
+    struct dirent *dirent;
+    rewinddir(directory_content);
+    while ((dirent = readdir(directory_content)) != NULL) {
         int tmp_len = strlen(dirent->d_name);
+        int temp_type_len = strlen(get_type(dirent->d_type));
         if (tmp_len > file_name_size) {
             file_name_size = tmp_len;
         }
-        dirent = readdir(directory_content);
+        if (temp_type_len > file_type_size) {
+            file_type_size = temp_type_len;
+        }
     }
-    file_name_size+= 2;
+    file_name_size += 2;
     rewinddir(directory_content);
 }
 
@@ -130,16 +163,19 @@ char *get_type(unsigned char type)
     }
 }
 
+/**
+ * Calculates the proper size of a size for a given input of bytes.
+ * @param size
+ * @return shortened format of bytes
+ */
 char* format_file_size(size_t size)
 {
     static const char *units[] = {"B", "KB", "MB", "GB", "TB"};
     int unit_index = 0;
-
     while (size > 1024 && unit_index < sizeof(units) / sizeof(units[0]) - 1) {
         size /= 1024;
         unit_index++;
     }
-
     static char result[20]; // Assuming the largest size can be represented in 20 characters
     snprintf(result, sizeof(result), "%ld %s", size, units[unit_index]);
     return result;

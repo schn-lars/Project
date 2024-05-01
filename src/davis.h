@@ -30,6 +30,7 @@ struct Purse {
 #include "commands/hist.h"
 #include "commands/wordle.h"
 #include <stdio.h>
+#include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,5 +57,7 @@ void put_flags_first(char **chained_up_flags);
 void clear_input_struct();
 void print_davis();
 void end_davis();
+
+void *arrow_handler(void *args);
 
 #endif

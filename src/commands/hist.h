@@ -19,7 +19,7 @@
 #define COLOR_YELLOW       "\x1b[33m"
 
 #include "../davis.h"
-#include <pthread.h>
+#include <termios.h>
 
 struct Node {
     struct Node *prev;
@@ -42,7 +42,6 @@ void hist_add(struct Input *, int executed); // linked list setup or add nodes
 void traverse_hist(int direction); // > 0 goes left, 0 < goes right
 struct Node *create_node(struct Input *, int executed);
 void print_history(int executed, int size);
-void set_executed(int executed);
 int initialize_history();
 void print_red(int number);
 void print_green(int number);
