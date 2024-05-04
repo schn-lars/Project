@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <string.h>
 #ifndef PLOT_H
 #define PLOT_H
 #include "../davis.h"

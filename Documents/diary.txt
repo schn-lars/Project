@@ -90,6 +90,9 @@ flags:
 -s → saves graph as png directly
 
 arguments (after file/function argument)
+title:someGraph
+xlabel:speed
+ylabel:distance
 color:ffffff → changes color of graph lines/points to hexa value
 style:1 → changes style of graph according to gnuplot legend
 xr:[-2:2] → limits range of x-values to given input

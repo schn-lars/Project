@@ -8,6 +8,7 @@ int plot(char **args) {
     }
     char* function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
     char* flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    char* command = malloc(sizeof(char) * 100); // maybe needs more space for longer commands
     memcpy(flags, args[1], 65);
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
@@ -23,65 +24,41 @@ int plot(char **args) {
     printf("Input: %s \n", function);
 
 
-    // Check if file exists or not
-    if (checkFile(function))
+    // Check if file exists or if direct function like sin(X)
+    if (checkFile(function)) // file exists -> add it to command with '' around for gnuplot
     {
-        printf("Access: File exists at path '%s'\n", function);
-        char command[100];
-        FILE *gnuplotPipe = popen("gnuplot -persist", "w");
-        if (!gnuplotPipe) {
-            printf("Error opening Gnuplot.\n");
-            return FAILURE;
-        }
-        printf("IF1 --- plot '%s' with lines\n", function);
-        sprintf(command, "plot '%s' with lines\n", function);
-        fprintf(gnuplotPipe, "%s", command);
-        fflush(gnuplotPipe);
-        fprintf(gnuplotPipe, "exit\n");
-
-        pclose(gnuplotPipe);
-        return SUCCESS;
+        printf("IF1 --- plot '%s'\n", function);
+        sprintf(command, "plot '%s' \n", function);
     }
-    else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL)
+    else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
-        printf("Access: File exists at path '%s'\n", function);
-        char command[100];
-        FILE *gnuplotPipe = popen("gnuplot -persist", "w");
-        if (!gnuplotPipe) {
-            printf("Error opening Gnuplot.\n");
-            return FAILURE;
-        }
-        printf("IF2 --- plot %s with lines\n", function);
-        sprintf(command, "plot %s with lines\n", function);
-        fprintf(gnuplotPipe, "%s", command);
-        fflush(gnuplotPipe);
-        fprintf(gnuplotPipe, "exit\n");
-
-        pclose(gnuplotPipe);
-        return SUCCESS;
+        //TODO: maybe needs a check if input file without '' exists
+        printf("IF2 --- plot %s\n", function);
+        sprintf(command, "plot %s \n", function);
     }
-    else if (checkFile(function) == 0)
+    else if (checkFile(function) == 0) // file does not exist -> must be a direct function (like sin(x)) -> add as is
     {
-        printf("Access: File does not exists at path '%s'\n", function); // direct function not a file
-        char command[100];
-        FILE *gnuplotPipe = popen("gnuplot -persist", "w");
-        if (!gnuplotPipe) {
-            printf("Error opening Gnuplot.\n");
-            return FAILURE;
-        }
         printf("IF3 --- plot %s with lines\n", function);
-        sprintf(command, "plot %s with lines\n", function);
-        fprintf(gnuplotPipe, "%s", command);
-        fflush(gnuplotPipe);
-        fprintf(gnuplotPipe, "exit\n");
-
-        pclose(gnuplotPipe);
-        return SUCCESS;
+        sprintf(command, "plot %s \n", function);
     }
 
+    // check flags and concatinate to command array
+
+    // here gnuplot command should be ready and will be sent
+    FILE *gnuplotPipe = popen("gnuplot -persist", "w");
+    if (!gnuplotPipe) {
+        printf("Error opening Gnuplot.\n");
+        return FAILURE;
+    }
+    fprintf(gnuplotPipe, "%s", command);
+    fflush(gnuplotPipe);
+    fprintf(gnuplotPipe, "exit\n");
+
+    pclose(gnuplotPipe);
+    return SUCCESS;
+    // TODO: Free everything
     return FAILURE;
 }
-
 
 
 /**
