@@ -6,7 +6,19 @@ int plot(char **args) {
         printf("Missing data.\n");
         return FAILURE;
     }
-    const char* function = args[1];
+    char* function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    char* flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    memcpy(flags, args[1], 65);
+
+    if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
+        memcpy(function, args[1], 65);
+    } else {
+        if (args[2] == NULL) { // TODO: for loop over args for other arguments
+            printf("Missing data.\n");
+            return FAILURE;
+        }
+        memcpy(function, args[2], 65);
+    }
 
     printf("Input: %s \n", function);
 
