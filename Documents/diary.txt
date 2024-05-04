@@ -78,3 +78,25 @@ which are multithreaded access to the standard input, which is not good. However
 Thursday 02.05.2024: Lars
 I fixed the bug I had with the double entry of "..". Although I do not know what I did. But somehow it resolved itself.
 I was just doodeling around and fixed it. Life's great.
+
+Friday 03.05.2024: Mirco
+We decided on the following flags and arguments for the plot command:
+flags:
+-b → removes borders
+-g → removes grid
+-e → adds errorbars
+-p → graph with points
+-l & -p → graph with lines and points
+-s → saves graph as png directly
+
+arguments (after file/function argument)
+color:ffffff → changes color of graph lines/points to hexa value
+style:1 → changes style of graph according to gnuplot legend
+xr:[-2:2] → limits range of x-values to given input
+yr:[-2:2] → limits range of y-values to given input
+legend:ne/nw/se/sw → moves legend to different corner
+
+potentially added later:
+pt:7 → changes point type according to gnuplot legend
+ps:2 → changes point size relatively to default size
+lw:2 → changes line width relatively to default size
