@@ -10,12 +10,13 @@ int plot(char **args) {
     char* flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
     char* command = malloc(sizeof(char) * 100); // maybe needs more space for longer commands
     memcpy(flags, args[1], 65);
+    char* arguments = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1) * 7);;
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
         memcpy(function, args[1], 65);
         checkFunction(command, function);
         int start = 2;
-        setupArg(args, command, start);
+        setupArg(args, command, arguments, start);
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
@@ -24,7 +25,7 @@ int plot(char **args) {
         memcpy(function, args[2], 65); // take first arg that's not a flag and save it in function
         checkFunction(command, function);
         int start = 3;
-        setupArg(args, command, start);
+        setupArg(args, command, arguments, start);
     }
 
     // check flags and concatinate to command array
@@ -35,7 +36,7 @@ int plot(char **args) {
         printf("Error opening Gnuplot.\n");
         return FAILURE;
     }
-    //fprintf(gnuplotPipe, "set title 'graphtitle'\nset xlabel 'axis'\nset grid\n"); Test if string\nString works
+    fprintf(gnuplotPipe, "%s", arguments);
     fprintf(gnuplotPipe, "%s", command);
     fflush(gnuplotPipe);
     fprintf(gnuplotPipe, "exit\n");
@@ -85,11 +86,9 @@ int checkFile(const char *path)
     return 1;
 }
 
-int setupArg(char** args, char* command, int start) {
+int setupArg(char** args, char* command, char* arguments, int start) {
     printf("start setupArg \n");
     int i;
-    char* arguments; // 7 char* arrays -> 1 array for each possible argument
-
     for (i = start; args[i] != NULL; i++) { // go over rest of arguments if existing
         // add effect of argument to command
         if (strstr(args[i], ":") == NULL) {
@@ -112,7 +111,9 @@ int checkArgs(char* arguments, char* arg) {
         printf("no argument");
         return 0;
     }
-    if (strstr(arg, "title") != NULL) {
+    char* newLine = "\n";
+    char* quot = "'";
+    if (strstr(arg, "title") != NULL || strstr(arg, "tit") != NULL) {
         int i = 0;
         for (i = 0; arg[i] != ':'; i++) {
             //printf("%s \n", &arg[i]);
@@ -121,12 +122,14 @@ int checkArgs(char* arguments, char* arg) {
         int j;
         char* extractedInput = &arg[i];
         // now the input for the title should be saved in extractedInput
-        char argCommand[100] = "set title ";
+        char argCommand[100] = "set title '";
+        strcat(extractedInput, quot);
         printf("new title: %s \n", extractedInput);
-        //char buffer[200];
         strcat(argCommand, extractedInput);
         printf("command: %s\n", argCommand);
-
+        strcat(argCommand, newLine);
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "xlabel") != NULL) {
 

@@ -18,6 +18,6 @@ int plot(char **args);
 int checkFile(const char *path);
 int checkFunction(char* command, char *function);
 int checkArgs(char* arguments, char* arg);
-int setupArg(char** args, char* command, int start);
+int setupArg(char** args, char* command, char* arguments, int start);
 
 #endif
