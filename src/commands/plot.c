@@ -114,12 +114,11 @@ int checkArgs(char* arguments, char* arg) {
     char* newLine = "\n";
     char* quot = "'";
     if (strstr(arg, "title") != NULL || strstr(arg, "tit") != NULL) {
-        int i = 0;
+        int i;
         for (i = 0; arg[i] != ':'; i++) {
             //printf("%s \n", &arg[i]);
         }
         i++;
-        int j;
         char* extractedInput = &arg[i];
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set title '";
@@ -131,20 +130,94 @@ int checkArgs(char* arguments, char* arg) {
         strcat(arguments, argCommand);
         printf("arguments: %s\n", arguments);
     }
-    if (strstr(arg, "xlabel") != NULL) {
-
+    if (strstr(arg, "xlabel") != NULL || strstr(arg, "xl") != NULL) {
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100] = "set xlabel '";
+        strcat(extractedInput, quot);
+        printf("new xlabel: %s \n", extractedInput);
+        strcat(argCommand, extractedInput);
+        printf("command: %s\n", argCommand);
+        strcat(argCommand, newLine);
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "ylabel") != NULL) {
-
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100] = "set ylabel '";
+        strcat(extractedInput, quot);
+        printf("new ylabel: %s \n", extractedInput);
+        strcat(argCommand, extractedInput);
+        printf("command: %s\n", argCommand);
+        strcat(argCommand, newLine);
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "legend") != NULL || strstr(arg, "box") != NULL || strstr(arg, "key") != NULL) {
-
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100];
+        if (strstr(extractedInput, "ne") != NULL || strstr(extractedInput, "northeast") != NULL) {
+           memcpy(argCommand, "set key top right\n", 25);
+        } else if (strstr(extractedInput, "nw") != NULL || strstr(extractedInput, "northwest") != NULL) {
+            memcpy(argCommand, "set key top left\n", 25);
+        } else if (strstr(extractedInput, "nc") != NULL || strstr(extractedInput, "north") != NULL) {
+            memcpy(argCommand, "set key top center\n", 25);
+        } else if (strstr(extractedInput, "se") != NULL || strstr(extractedInput, "southeast") != NULL) {
+            memcpy(argCommand, "set key bottom right\n", 25);
+        } else if (strstr(extractedInput, "sw") != NULL || strstr(extractedInput, "southwest") != NULL) {
+            memcpy(argCommand, "set key bottom left\n", 25);
+        } else if (strstr(extractedInput, "sc") != NULL || strstr(extractedInput, "south") != NULL) {
+            memcpy(argCommand, "set key bottom center\n", 25);
+        }
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "xr") != NULL || strstr(arg, "xrange") != NULL) {
-
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100] = "set xr ";
+        printf("new x range: %s \n", extractedInput);
+        strcat(argCommand, extractedInput);
+        strcat(argCommand, newLine);
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "yr") != NULL || strstr(arg, "yrange") != NULL) {
-
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100] = "set yr ";
+        printf("new y range: %s \n", extractedInput);
+        strcat(argCommand, extractedInput);
+        strcat(argCommand, newLine);
+        strcat(arguments, argCommand);
+        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "color") != NULL || strstr(arg, "colour") != NULL) {
         // TODO: maybe with set style
