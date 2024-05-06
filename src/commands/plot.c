@@ -42,8 +42,14 @@ int plot(char **args) {
     fprintf(gnuplotPipe, "exit\n");
 
     pclose(gnuplotPipe);
+
+    // Free everything
+    free(function);
+    free(flags);
+    free(command);
+    free(arguments);
     return SUCCESS;
-    // TODO: Free everything
+
     return FAILURE;
 }
 
@@ -147,7 +153,7 @@ int checkArgs(char* arguments, char* arg) {
         strcat(arguments, argCommand);
         printf("arguments: %s\n", arguments);
     }
-    if (strstr(arg, "ylabel") != NULL) {
+    if (strstr(arg, "ylabel") != NULL || strstr(arg, "yl")) {
         int i;
         for (i = 0; arg[i] != ':'; i++) {
             //printf("%s \n", &arg[i]);
@@ -223,5 +229,7 @@ int checkArgs(char* arguments, char* arg) {
         // TODO: maybe with set style
     }
     printf("checkArgs success \n");
+    free(newLine);
+    free(quot);
     return 1;
 }
