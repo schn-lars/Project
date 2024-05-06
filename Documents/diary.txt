@@ -100,3 +100,6 @@ potentially added later:
 pt:7 → changes point type according to gnuplot legend
 ps:2 → changes point size relatively to default size
 lw:2 → changes line width relatively to default size
+
+Monday 06.05.2024: Lars
+Today I fixed the ls command to now support printing of other directories apart from the current one.

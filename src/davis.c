@@ -72,7 +72,6 @@ void get_input() {
         return;
     }
     input[strcspn(input, "\n")] = '\0';
-    // -----
     in = (struct Input *)malloc(sizeof(struct Input));
     if (in == NULL) {
         warn("Could not allocate memory for struct Input");
@@ -87,8 +86,6 @@ void get_input() {
     in->no_commands = 0;
     second_cmd_procedure = 0;
 }
-
-
 
 /*
  * Translating the given input in syntactically correct parameters.
@@ -486,4 +483,40 @@ void end_davis()
     pthread_join(arrow_thread, NULL);
     free_tree();
     LOGGER("end_davis", "End");
+}
+
+void *arrowKeyListener(void *arg)
+{
+    while(1) {
+        struct termios oldt, newt;
+        int ch;
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+        ch = getchar();
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        if (ch == 27) { // escapesequence for arrow key
+            ch = getchar();
+            if (ch == '[') { // when you type you get ^[[A
+                ch = getchar(); // Lesen Sie das nächste Zeichen, um die Richtung der Pfeiltaste zu identifizieren
+                // Hier können Sie je nach gedrückter Pfeiltaste unterschiedliche Aktionen ausführen
+                switch(ch) {
+                    case 'A': // Pfeil nach oben
+                        printf("Pfeil nach oben gedrückt\n");
+                        break;
+                    case 'B': // Pfeil nach unten
+                        printf("Pfeil nach unten gedrückt\n");
+                        break;
+                    case 'C': // Pfeil nach rechts
+                        printf("Pfeil nach rechts gedrückt\n");
+                        break;
+                    case 'D': // Pfeil nach links
+                        printf("Pfeil nach links gedrückt\n");
+                        break;
+                }
+            }
+        }
+    }
+    return NULL;
 }

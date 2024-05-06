@@ -111,19 +111,13 @@ void print_history(int executed, int size)
             }
             printf(" %s ", curr->cmd_one[0]);
             for (int j = 1; j < MAX_INPUT_COUNT && curr->cmd_one[j] != NULL; j++) {
-                printf("%s", curr->cmd_one[j]);
-                if (curr->cmd_one[j + 1] != NULL) {
-                    printf(", ");
-                }
+                printf("%s ", curr->cmd_one[j]);
             }
             if (curr->no_commands == 2) {
                 LOGGER("print_history", "on second command");
-                printf(" | %s", curr->cmd_two[0]);
+                printf("| %s", curr->cmd_two[0]);
                 for (int i = 1; i < MAX_INPUT_COUNT && curr->cmd_two[i] != NULL; i++) {
-                    printf("%s", curr->cmd_two[i]);
-                    if (curr->cmd_two[i + 1] != NULL) {
-                        printf(", ");
-                    }
+                    printf("%s ", curr->cmd_two[i]);
                 }
             }
             printf("\n");

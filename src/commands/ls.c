@@ -15,19 +15,29 @@ int ls(char **args) // l = 1, a = 2, al = 3
     }
     flag[0] = '\0'; //
     DIR *directory_content;
+    char *path = malloc(sizeof(char) * 257);
+    memset(path,0,257);
+    strcpy(path, ".");
     if (args[1] != NULL) { // first element is the command itself
         if (args[1][0] == '-') { // if only input is "-" as parameter
             strcpy(flag, args[1]);
             if (args[2] != NULL) {
                 directory_content = opendir(args[2]);
+                strcat(path, "/");
+                strcat(path, args[2]);
             } else {
                 directory_content = opendir(".");
+
             }
         } else {
             if (args[2] != NULL) {
                 warn("Wrong usage of ls: ls <-FLAGS> <DIRECTORY>");
             } else {
+                LOGGER("ls() - 1", "trying to opendir");
                 directory_content = opendir(args[1]);
+                strcat(path, "/");
+                strcat(path, args[1]);
+                LOGGER("ls() - 1", "succesful opendir");
             }
         }
     } else {
@@ -55,8 +65,11 @@ int ls(char **args) // l = 1, a = 2, al = 3
 
     while ((directory_entry = readdir(directory_content)) != NULL) {
         struct stat *file_stat = malloc(sizeof(struct stat));
-        if (stat(directory_entry->d_name, file_stat) == -1) {
+        char full_path[1024];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, directory_entry->d_name);
+        if (stat(full_path, file_stat) == -1) {
             perror("stat");
+            LOGGER("Stat-ls()", full_path);
             return FAILURE;
         }
         if (directory_entry->d_name[0] == '.') {
