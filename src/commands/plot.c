@@ -1,31 +1,35 @@
 #include "plot.h"
 
+char* function;
+char* flags;
+char* command;
+char* arguments;
 
 int plot(char **args) {
     if (args[1] == NULL) {
         printf("Missing data.\n");
         return FAILURE;
     }
-    char* function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-    char* flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-    char* command = malloc(sizeof(char) * 100); // maybe needs more space for longer commands
+    function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    command = malloc(sizeof(char) * 100); // maybe needs more space for longer commands
+    arguments = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1) * 7);
     memcpy(flags, args[1], 65);
-    char* arguments = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1) * 7);;
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
         memcpy(function, args[1], 65);
-        checkFunction(command, function);
+        checkFunction();
         int start = 2;
-        setupArg(args, command, arguments, start);
+        setupArg(args,start);
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
             return FAILURE;
         }
         memcpy(function, args[2], 65); // take first arg that's not a flag and save it in function
-        checkFunction(command, function);
+        checkFunction();
         int start = 3;
-        setupArg(args, command, arguments, start);
+        setupArg(args, start);
     }
 
     // check flags and concatinate to command array
@@ -53,28 +57,24 @@ int plot(char **args) {
     return FAILURE;
 }
 
-int checkFunction(char* command, char *function) {
+int checkFunction() {
     // Check if file exists or if direct function like sin(X)
     if (checkFile(function)) // file exists -> add it to command with '' around for gnuplot
     {
-        printf("IF1 --- plot '%s'\n", function);
         sprintf(command, "plot '%s' \n", function);
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
         //TODO: maybe needs a check if input file without '' exists
-        printf("IF2 --- plot %s\n", function);
         sprintf(command, "plot %s \n", function);
     }
     else if (checkFile(function) == 0) // file does not exist -> must be a direct function (like sin(x)) -> add as is
     {
-        printf("IF3 --- plot %s with lines\n", function);
         sprintf(command, "plot %s \n", function);
     } else {
         printf("file or function does not exist\n");
         return FAILURE;
     }
-    printf("checkFunction success \n");
     return 1;
 }
 
@@ -92,8 +92,7 @@ int checkFile(const char *path)
     return 1;
 }
 
-int setupArg(char** args, char* command, char* arguments, int start) {
-    printf("start setupArg \n");
+int setupArg(char** args, int start) {
     int i;
     for (i = start; args[i] != NULL; i++) { // go over rest of arguments if existing
         // add effect of argument to command
@@ -103,16 +102,14 @@ int setupArg(char** args, char* command, char* arguments, int start) {
         } else {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
             memcpy(arg, args[i], 65);
-            checkArgs(arguments, arg);
+            checkArgs(arg);
             free(arg);
         }
     }
-    printf("setupArg success \n");
     return 1;
 }
 
-int checkArgs(char* arguments, char* arg) {
-    printf("start checkArgs \n");
+int checkArgs(char* arg) {
     if (arg == NULL) {
         printf("no argument");
         return 0;
@@ -129,12 +126,9 @@ int checkArgs(char* arguments, char* arg) {
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set title '";
         strcat(extractedInput, quot);
-        printf("new title: %s \n", extractedInput);
         strcat(argCommand, extractedInput);
-        printf("command: %s\n", argCommand);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "xlabel") != NULL || strstr(arg, "xl") != NULL) {
         int i;
@@ -146,12 +140,9 @@ int checkArgs(char* arguments, char* arg) {
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set xlabel '";
         strcat(extractedInput, quot);
-        printf("new xlabel: %s \n", extractedInput);
         strcat(argCommand, extractedInput);
-        printf("command: %s\n", argCommand);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "ylabel") != NULL || strstr(arg, "yl")) {
         int i;
@@ -163,12 +154,9 @@ int checkArgs(char* arguments, char* arg) {
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set ylabel '";
         strcat(extractedInput, quot);
-        printf("new ylabel: %s \n", extractedInput);
         strcat(argCommand, extractedInput);
-        printf("command: %s\n", argCommand);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "legend") != NULL || strstr(arg, "box") != NULL || strstr(arg, "key") != NULL) {
         int i;
@@ -193,7 +181,6 @@ int checkArgs(char* arguments, char* arg) {
             memcpy(argCommand, "set key bottom center\n", 25);
         }
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "xr") != NULL || strstr(arg, "xrange") != NULL) {
         int i;
@@ -204,11 +191,9 @@ int checkArgs(char* arguments, char* arg) {
         char* extractedInput = &arg[i];
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set xr ";
-        printf("new x range: %s \n", extractedInput);
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "yr") != NULL || strstr(arg, "yrange") != NULL) {
         int i;
@@ -219,17 +204,12 @@ int checkArgs(char* arguments, char* arg) {
         char* extractedInput = &arg[i];
         // now the input for the title should be saved in extractedInput
         char argCommand[100] = "set yr ";
-        printf("new y range: %s \n", extractedInput);
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
-        printf("arguments: %s\n", arguments);
     }
     if (strstr(arg, "color") != NULL || strstr(arg, "colour") != NULL) {
         // TODO: maybe with set style
     }
-    printf("checkArgs success \n");
-    free(newLine);
-    free(quot);
     return 1;
 }
