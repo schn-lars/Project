@@ -93,7 +93,7 @@ arguments (after file/function argument)
 title:someGraph
 xlabel:speed
 ylabel:distance
-color:ffffff → changes color of graph lines/points to hexa value
+color:#ffffff → changes color of graph lines/points to hexa value
 xr:[-2:2] → limits range of x-values to given input
 yr:[-2:2] → limits range of y-values to given input
 legend:ne/nw/se/sw → moves legend to different corner
@@ -102,3 +102,8 @@ potentially added later:
 pt:7 → changes point type according to gnuplot legend
 ps:2 → changes point size relatively to default size
 lw:2 → changes line width relatively to default size
+
+Sunday 05.05.2024: Mirco
+Now all arguments except the color argument work.
+The color argument is not a 'set' command but has to be put after 'plot ...' so it has to be handled differetnly.
+Most flags have to be handled like this so it should be easy to do them the same.
