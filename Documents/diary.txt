@@ -103,3 +103,7 @@ lw:2 → changes line width relatively to default size
 
 Monday 06.05.2024: Lars
 Today I fixed the ls command to now support printing of other directories apart from the current one.
+
+Tuesday 07.05.2024: Lars
+I implemented the additional "-e" flag for the history command. With it we can now re-execute a previously executed command.
+It seems to work after a couple of tests.

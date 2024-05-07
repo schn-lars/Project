@@ -6,7 +6,6 @@
 
 char input[MAX_INPUT_BUFFER];
 struct Input *in;
-pthread_t arrow_thread;
 struct Purse *purse;
 int second_cmd_procedure;
 int shell_running = 1;
@@ -31,10 +30,10 @@ int main()
 
 void davis()
 {
-    // TODO vielleicht eine grafische Fläche zu Beginn
     printf("Hey, I'm DAVIS. How may I assist You?\n");
     purse->points = 10000;
     shell_running = 1;
+
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
         parse_input_into_commands(); // korrekt geparst
@@ -72,7 +71,7 @@ void get_input() {
         return;
     }
     input[strcspn(input, "\n")] = '\0';
-    in = (struct Input *)malloc(sizeof(struct Input));
+    in = malloc(sizeof(struct Input));
     if (in == NULL) {
         warn("Could not allocate memory for struct Input");
         exit(1);
@@ -266,6 +265,17 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "hist") == 0) {
             LOGGER("Calling hist: ", in->cmd_one[0]);
             executed = hist(in);
+            if (executed == 2) { // successful -e command
+                LOGGER("exe_command()", "successful prev command");
+                if (munmap(shm_ptr, sizeof(int)) == -1) {
+                    perror("munmap");
+                    exit(FAILURE);
+                }
+                close(shm_fd);
+                unlink(SCRATCH_FILE);
+                exec_command();
+                return;
+            }
         } else if (strcmp(in->cmd_one[0], "wordle") == 0) {
             LOGGER("Calling wordle: ", in->cmd_one[0]);
             executed = wordle(purse);
@@ -480,43 +490,7 @@ void clear_input_struct()
 void end_davis()
 {
     LOGGER("end_davis()", "Start");
-    pthread_join(arrow_thread, NULL);
     free_tree();
     LOGGER("end_davis", "End");
 }
 
-void *arrowKeyListener(void *arg)
-{
-    while(1) {
-        struct termios oldt, newt;
-        int ch;
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-        ch = getchar();
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-        if (ch == 27) { // escapesequence for arrow key
-            ch = getchar();
-            if (ch == '[') { // when you type you get ^[[A
-                ch = getchar(); // Lesen Sie das nächste Zeichen, um die Richtung der Pfeiltaste zu identifizieren
-                // Hier können Sie je nach gedrückter Pfeiltaste unterschiedliche Aktionen ausführen
-                switch(ch) {
-                    case 'A': // Pfeil nach oben
-                        printf("Pfeil nach oben gedrückt\n");
-                        break;
-                    case 'B': // Pfeil nach unten
-                        printf("Pfeil nach unten gedrückt\n");
-                        break;
-                    case 'C': // Pfeil nach rechts
-                        printf("Pfeil nach rechts gedrückt\n");
-                        break;
-                    case 'D': // Pfeil nach links
-                        printf("Pfeil nach links gedrückt\n");
-                        break;
-                }
-            }
-        }
-    }
-    return NULL;
-}

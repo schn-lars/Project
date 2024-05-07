@@ -20,15 +20,15 @@ int wordle(struct Purse *purse)
     }
     if (state == 1) {
         printf("[WORDLE] ");
-        printf(COLOR_RED "You lost!" RESET_COLOR);
+        printf(RED "You lost!" RESET);
         printf(" Better luck next time. The word was: ");
-        printf(COLOR_RED "%s.\n" RESET_COLOR, solution);
+        printf(RED "%s.\n" RESET, solution);
         sleep(5);
         clear();
         print_davis();
         return FAILURE;
     } else if (state == 2) {
-        printf("[WORDLE]" COLOR_GREEN  " You won!\n"   RESET_COLOR);
+        printf("[WORDLE]" GREEN  " You won!\n"   RESET);
         sleep(5);
         clear();
         print_davis();
@@ -47,7 +47,7 @@ void init_word() {
     }
 
     srand(time(NULL));  // Seed the random number generator
-    int lines = LINES;
+    int lines = WORDS;
     int random_line = rand() % lines;
     char buffer[WORD_LENGTH + 1];
     int is_null = 1;
@@ -105,9 +105,9 @@ void print_game()
     for (int i = 0; i < WORD_COUNT; i++) {
         for (int j = 0; j < WORD_LENGTH; j++) {
             if (game[i]->word[j]->correct == 1) {
-                printf(COLOR_YELLOW   "[ %c ]"   RESET_COLOR, game[i]->word[j]->character);
+                printf(YELLOW   "[ %c ]"   RESET, game[i]->word[j]->character);
             } else if (game[i]->word[j]->correct == 2) {
-                printf(COLOR_GREEN   "[ %c ]"   RESET_COLOR, game[i]->word[j]->character);
+                printf(GREEN   "[ %c ]"   RESET, game[i]->word[j]->character);
             } else {
                 if (game[i]->word[j]->character == '\0') {
                     printf("[ - ]");

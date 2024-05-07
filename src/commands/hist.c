@@ -37,6 +37,18 @@ int hist(struct Input *input)
                 print_history(0, requested_entries);
             } else if ((strcmp(input->cmd_one[1], "-a")) == 0) {
                 print_history(-1, requested_entries);
+            } else if ((strcmp(input->cmd_one[1], "-e")) == 0) {
+                if ((atoi(input->cmd_one[2]) <= history->size) && (atoi(input->cmd_one[2]) != 0)) {
+                    LOGGER("hist", "executing prev command");
+                    execute(input, requested_entries);
+                    return 2;
+                } else {
+                    warn("Your requested number exceeds history!");
+                    return FAILURE;
+                }
+            } else {
+                warn("Wrong usage of hist.");
+                return FAILURE;
             }
         }
     }
@@ -173,12 +185,12 @@ struct Node *create_node(struct Input *input, int executed)
 
 void print_red(int number)
 {
-    printf(COLOR_RED   "[%d]"   RESET_COLOR, number);
+    printf(RED   "[%d]"   RESET, number);
 }
 
 void print_green(int number)
 {
-    printf(COLOR_GREEN   "[%d]"   RESET_COLOR, number);
+    printf(GREEN   "[%d]"   RESET, number);
 }
 
 void free_tree()
@@ -207,4 +219,30 @@ void free_tree()
     }
     free(history);
     LOGGER("free_tree", "End");
+}
+
+/**
+ * Copies the desired command into the current input.
+ * @param input
+ * @param id
+ */
+void execute(struct Input *input, int id)
+{
+    struct Node *curr = history->head;
+    while (curr->number != id) {
+        curr = curr->next;
+    }
+    input->no_commands = curr->no_commands;
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
+        if (curr->cmd_one[i] != NULL) {
+            input->cmd_one[i] = strdup(curr->cmd_one[i]);
+        } else {
+            input->cmd_one[i] = NULL;
+        }
+        if (curr->cmd_two[i] != NULL) {
+            input->cmd_two[i] = strdup(curr->cmd_two[i]);
+        } else {
+            input->cmd_two[i] = NULL;
+        }
+    }
 }

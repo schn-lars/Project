@@ -3,5 +3,5 @@
 int clear()
 {
     system("clear");
-    return 1;
+    return 0;
 }

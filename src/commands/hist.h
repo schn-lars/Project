@@ -3,6 +3,7 @@
  *      -a => Lists all previous commands
  *      -t => Lists only correctly executed commands
  *      -f => Lists only wrongly executed commands
+ *      -e => Executes command with ID = NUMBER
  *      NUMBER => optional integer for desired amount of entries shown (DEFAULT=5)
  */
 
@@ -10,16 +11,15 @@
 #define HIST_H
 
 #define DEFAULT_COUNT       5
-#define COLOR_RED          "\x1b[31m"
-#define COLOR_GREEN        "\x1b[32m"
-#define STYLE_BOLD         "\x1b[1m"
-#define STYLE_ITALIC       "\x1b[3m"
-#define STYLE_UNDERLINE    "\x1b[4m"
-#define RESET_COLOR        "\x1b[0m"
-#define COLOR_YELLOW       "\x1b[33m"
+#define RED                 "\x1b[31m"
+#define GREEN               "\x1b[32m"
+#define BOLD                "\x1b[1m"
+#define ITALIC              "\x1b[3m"
+#define UNDERLINE           "\x1b[4m"
+#define RESET               "\x1b[0m"
+#define YELLOW              "\x1b[33m"
 
 #include "../davis.h"
-#include <termios.h>
 
 struct Node {
     struct Node *prev;
@@ -38,13 +38,14 @@ struct History {
 };
 
 int hist(struct Input *); // main accesspoint for command
-void hist_add(struct Input *, int executed); // linked list setup or add nodes
+void hist_add(struct Input *input, int executed); // linked list setup or add nodes
 void traverse_hist(int direction); // > 0 goes left, 0 < goes right
-struct Node *create_node(struct Input *, int executed);
+struct Node *create_node(struct Input *input, int executed);
 void print_history(int executed, int size);
 int initialize_history();
 void print_red(int number);
 void print_green(int number);
 void free_tree();
+void execute(struct Input *input, int id);
 
 #endif

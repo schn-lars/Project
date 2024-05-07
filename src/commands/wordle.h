@@ -14,13 +14,12 @@
 
 #include <time.h>
 #include "../davis.h"
-#include "pthread.h"
 #include <unistd.h>
 
 #define WORD_LENGTH     5
 #define WORD_COUNT      6
 #define WORD_FILE       "../resources/wordle_list.txt"
-#define LINES           2309
+#define WORDS           2309
 
 struct Word {
      struct Char *word[WORD_COUNT];
