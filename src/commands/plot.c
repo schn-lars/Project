@@ -4,6 +4,8 @@ char* function;
 char* flags;
 char* command;
 char* arguments;
+char* newLine = "\n";
+char* quot = "'";
 
 int plot(char **args) {
     if (args[1] == NULL) {
@@ -12,8 +14,10 @@ int plot(char **args) {
     }
     function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
     flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-    command = malloc(sizeof(char) * 100); // maybe needs more space for longer commands
-    arguments = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1) * 7);
+    command = malloc(sizeof(char) * 1024); // maybe needs more space for longer commands
+    memset(command, 0, 1024);
+    arguments = malloc(sizeof(char) * 1024);
+    memset(arguments, 0, 1024);
     memcpy(flags, args[1], 65);
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
@@ -40,7 +44,10 @@ int plot(char **args) {
         printf("Error opening Gnuplot.\n");
         return FAILURE;
     }
-    fprintf(gnuplotPipe, "%s", arguments);
+    strcat(command, newLine);
+    if (arguments != NULL) {
+        fprintf(gnuplotPipe, "%s", arguments);
+    }
     fprintf(gnuplotPipe, "%s", command);
     fflush(gnuplotPipe);
     fprintf(gnuplotPipe, "exit\n");
@@ -59,18 +66,30 @@ int plot(char **args) {
 
 int checkFunction() {
     // Check if file exists or if direct function like sin(X)
+    char* functionCommand = malloc(sizeof(char) * 513);
+    memset(functionCommand, 0, 513);
     if (checkFile(function)) // file exists -> add it to command with '' around for gnuplot
     {
-        sprintf(command, "plot '%s' \n", function);
+        strcpy(functionCommand, "plot '");
+        strcat(functionCommand, function);
+        strcat(functionCommand, quot);
+        strcat(command, functionCommand);
+        //sprintf(command, "plot '%s' \n", function);
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
         //TODO: maybe needs a check if input file without '' exists
-        sprintf(command, "plot %s \n", function);
+        strcpy(functionCommand, "plot ");
+        strcat(functionCommand, function);
+        strcat(command, functionCommand);
+        //sprintf(command, "plot %s \n", function);
     }
     else if (checkFile(function) == 0) // file does not exist -> must be a direct function (like sin(x)) -> add as is
     {
-        sprintf(command, "plot %s \n", function);
+        strcpy(functionCommand, "plot ");
+        strcat(functionCommand, function);
+        strcat(command, functionCommand);
+        //sprintf(command, "plot %s \n", function);
     } else {
         printf("file or function does not exist\n");
         return FAILURE;
@@ -114,8 +133,7 @@ int checkArgs(char* arg) {
         printf("no argument");
         return 0;
     }
-    char* newLine = "\n";
-    char* quot = "'";
+
     if (strstr(arg, "title") != NULL || strstr(arg, "tit") != NULL) {
         int i;
         for (i = 0; arg[i] != ':'; i++) {
@@ -209,7 +227,19 @@ int checkArgs(char* arg) {
         strcat(arguments, argCommand);
     }
     if (strstr(arg, "color") != NULL || strstr(arg, "colour") != NULL) {
-        // TODO: maybe with set style
+        int i;
+        for (i = 0; arg[i] != ':'; i++) {
+            //printf("%s \n", &arg[i]);
+        }
+        i++;
+        char* extractedInput = &arg[i];
+        // now the input for the title should be saved in extractedInput
+        char argCommand[100] = " lc rgb '";
+        strcat(argCommand, extractedInput);
+        strcat(argCommand, quot);
+        printf("argCommand in color: %s\n", argCommand);
+        strcat(command, argCommand);
+        printf("command in color: %s\n", command);
     }
     return 1;
 }
