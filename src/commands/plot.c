@@ -12,16 +12,18 @@ int plot(char **args) {
         printf("Missing data.\n");
         return FAILURE;
     }
-    function = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-    flags = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    function = malloc(sizeof(char) * 512);
+    memset(function, 0, 512);
+    flags = malloc(sizeof(char) * 100);
+    memset(flags, 0, 100);
     command = malloc(sizeof(char) * 1024); // maybe needs more space for longer commands
     memset(command, 0, 1024);
     arguments = malloc(sizeof(char) * 1024);
     memset(arguments, 0, 1024);
-    memcpy(flags, args[1], 65);
+    memcpy(flags, args[1], 100);
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
-        memcpy(function, args[1], 65);
+        memcpy(function, args[1], 512);
         checkFunction();
         int start = 2;
         setupArg(args,start);
@@ -30,7 +32,7 @@ int plot(char **args) {
             printf("Missing data.\n");
             return FAILURE;
         }
-        memcpy(function, args[2], 65); // take first arg that's not a flag and save it in function
+        memcpy(function, args[2], 512); // take first arg that's not a flag and save it in function
         checkFunction();
         int start = 3;
         setupArg(args, start);
