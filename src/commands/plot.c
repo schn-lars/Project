@@ -6,6 +6,8 @@ char* command;
 char* arguments;
 char* newLine = "\n";
 char* quot = "'";
+int colorChanged = 0;
+int darkmode = 1;
 
 int plot(char **args) {
     if (args[1] == NULL) {
@@ -32,6 +34,7 @@ int plot(char **args) {
         strcat(command, lines);
         char grid[100] = "set grid\n";
         strcat(arguments, grid);
+        // TODO: grün als default farbe aber vor arguments machen sodass überschrebit falls costume farbe gewählt
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
@@ -45,6 +48,16 @@ int plot(char **args) {
             checkFlags();
         }
     }
+    // set green as default color
+    if (colorChanged == 0) {
+        char argCommand[100] = " lc rgb 'aquamarine' ";
+        strcat(command, argCommand);
+    }
+    if (darkmode == 1) {
+        char background[1024] = "set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb 'grey30' behind\nset xlabel tc rgb 'dark-turquoise'\nset ylabel tc rgb 'dark-turquoise'\nset title tc rgb 'dark-turquoise'\nset key tc rgb 'dark-turquoise'\nset tics tc rgb 'dark-turquoise'\nset border lc rgb 'dark-turquoise'\n";
+        strcat(arguments, background);
+    }
+
 
     // check flags and concatinate to command array
 
@@ -284,6 +297,7 @@ int checkArgs(char* arg) {
         strcat(argCommand, extractedInput);
         strcat(argCommand, quot);
         strcat(command, argCommand);
+        colorChanged = 1;
     }
     return 1;
 }
