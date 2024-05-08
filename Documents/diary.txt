@@ -79,6 +79,7 @@ Thursday 02.05.2024: Lars
 I fixed the bug I had with the double entry of "..". Although I do not know what I did. But somehow it resolved itself.
 I was just doodeling around and fixed it. Life's great.
 
+
 Friday 03.05.2024: Mirco
 We decided on the following flags and arguments for the plot command:
 flags:
@@ -86,6 +87,7 @@ flags:
 -g → removes grid
 -e → adds errorbars
 -p → graph with points
+-l -> graph with lines
 -l & -p → graph with lines and points
 -s → saves graph as png directly
 
@@ -103,7 +105,13 @@ pt:7 → changes point type according to gnuplot legend
 ps:2 → changes point size relatively to default size
 lw:2 → changes line width relatively to default size
 
+
 Sunday 05.05.2024: Mirco
 Now all arguments except the color argument work.
 The color argument is not a 'set' command but has to be put after 'plot ...' so it has to be handled differetnly.
 Most flags have to be handled like this so it should be easy to do them the same.
+
+Tuesday 07.05.2024: Mirco
+Implemented the flags and the color argument. Flag '-s' is still missing because I need to read into saving files a bit more.
+There is still a problem: it prints out "invalid argument" when you have more then one string for the flags.
+This is most likely because after concatinating the flags, the programm sees this as another empty argument.

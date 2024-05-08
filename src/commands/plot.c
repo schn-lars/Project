@@ -27,6 +27,11 @@ int plot(char **args) {
         checkFunction();
         int start = 2;
         setupArg(args,start);
+        // set Default settings
+        char lines[100] = " w l ";
+        strcat(command, lines);
+        char grid[100] = "set grid\n";
+        strcat(arguments, grid);
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
@@ -36,6 +41,9 @@ int plot(char **args) {
         checkFunction();
         int start = 3;
         setupArg(args, start);
+        if (flags != NULL) {
+            checkFlags();
+        }
     }
 
     // check flags and concatinate to command array
@@ -62,8 +70,44 @@ int plot(char **args) {
     free(command);
     free(arguments);
     return SUCCESS;
+}
 
-    return FAILURE;
+int checkFlags() {
+    if (strstr(flags, "b") != NULL) { // removes top and right border of graph
+        char border[100] = "set border 3\nset tics nomirror\nset border lw 1.5\n";
+        strcat(arguments, border);
+    }
+    if (strstr(flags, "g") != NULL) { // removes grid
+        char grid[100] = "unset grid\n";
+        strcat(arguments, grid);
+    } else { // per default with grid
+        char grid[100] = "set grid\n";
+        strcat(arguments, grid);
+    }
+    if (strstr(flags, "e") != NULL) { // adds errorbars
+        //TODO: check if file has 3 columns
+        if (strstr(flags, "l") != NULL) {
+            char eBars[100] = " with errorlines ";
+            strcat(command, eBars);
+        } else if (strstr(flags, "p") != NULL) {
+            char eBars[100] = " with errorbars ";
+            strcat(command, eBars);
+        }
+    }
+    if (strstr(flags, "p") != NULL && strstr(flags, "l") == NULL && strstr(flags, "e") == NULL) { // graph with lines
+        char points[100] = " w p";
+        strcat(command, points);
+    } else if (strstr(flags, "l") != NULL && strstr(flags, "p") != NULL && strstr(flags, "e") == NULL) { // with points and lines
+        char linepoints[100] = " w lp ";
+        strcat(command, linepoints);
+    } else if (strstr(flags, "l") != NULL && strstr(flags, "e") == NULL){ // per default with lines
+        char lines[100] = " w l ";
+        strcat(command, lines);
+    }
+    if (strstr(flags, "s") != NULL) { // saves picture of graph as png
+
+    }
+    return 1;
 }
 
 int checkFunction() {
@@ -239,9 +283,7 @@ int checkArgs(char* arg) {
         char argCommand[100] = " lc rgb '";
         strcat(argCommand, extractedInput);
         strcat(argCommand, quot);
-        printf("argCommand in color: %s\n", argCommand);
         strcat(command, argCommand);
-        printf("command in color: %s\n", command);
     }
     return 1;
 }

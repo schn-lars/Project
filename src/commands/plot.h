@@ -15,6 +15,7 @@
 
 
 int plot(char **args);
+int checkFlags();
 int checkFile(const char *path);
 int checkFunction();
 int checkArgs(char* arg);
