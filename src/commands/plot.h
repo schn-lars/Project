@@ -8,13 +8,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <string.h>
 #ifndef PLOT_H
 #define PLOT_H
 #include "../davis.h"
 
 
 int plot(char **args);
+int checkFlags();
 int checkFile(const char *path);
+int checkFunction();
+int checkArgs(char* arg);
+int setupArg(char** args, int start);
 
 #endif
