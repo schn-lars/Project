@@ -253,13 +253,13 @@ int checkArgs(char* arg) {
            memcpy(argCommand, "set key top right\n", 25);
         } else if (strstr(extractedInput, "nw") != NULL || strstr(extractedInput, "northwest") != NULL) {
             memcpy(argCommand, "set key top left\n", 25);
-        } else if (strstr(extractedInput, "nc") != NULL || strstr(extractedInput, "north") != NULL) {
+        } else if (strstr(extractedInput, "nc") != NULL || strstr(extractedInput, "northcenter") != NULL) {
             memcpy(argCommand, "set key top center\n", 25);
         } else if (strstr(extractedInput, "se") != NULL || strstr(extractedInput, "southeast") != NULL) {
             memcpy(argCommand, "set key bottom right\n", 25);
         } else if (strstr(extractedInput, "sw") != NULL || strstr(extractedInput, "southwest") != NULL) {
             memcpy(argCommand, "set key bottom left\n", 25);
-        } else if (strstr(extractedInput, "sc") != NULL || strstr(extractedInput, "south") != NULL) {
+        } else if (strstr(extractedInput, "sc") != NULL || strstr(extractedInput, "southcenter") != NULL) {
             memcpy(argCommand, "set key bottom center\n", 25);
         }
         strcat(arguments, argCommand);
