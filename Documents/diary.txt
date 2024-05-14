@@ -107,3 +107,6 @@ Today I fixed the ls command to now support printing of other directories apart 
 Tuesday 07.05.2024: Lars
 I implemented the additional "-e" flag for the history command. With it we can now re-execute a previously executed command.
 It seems to work after a couple of tests.
+
+Tuesday 14.05.2024: Lars
+Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.

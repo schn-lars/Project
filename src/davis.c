@@ -14,7 +14,6 @@ int main()
 {
     print_davis();
     // Opening shell.
-
     if ((purse = malloc(sizeof(struct Purse))) == 0) {
         warn("Could not initialize purse.");
         return FAILURE;
@@ -33,7 +32,6 @@ void davis()
     printf("Hey, I'm DAVIS. How may I assist You?\n");
     purse->points = 10000;
     shell_running = 1;
-
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
         parse_input_into_commands(); // korrekt geparst
@@ -408,20 +406,34 @@ void chain_up_flags(char **parsed_sorted_input) {
  * Input: [CMD, -FLAGS, NULL, ... , ARGS, ..., NULL]
  * Output: [CMD, -FLAGS, ARGS, NULL, ...]
  */
-void put_flags_first(char **chained_up_flags) // [0] is combined flag, rest may vary
-{
-    LOGGER("put_flags_first()" , "start");
-    for (int j = 1; j < MAX_INPUT_COUNT; j++) {
-        if (chained_up_flags[j] != NULL && chained_up_flags[j][0] == '\0') {
-            for (int k = j + 1; k < MAX_INPUT_COUNT; k++) {
-                if (chained_up_flags[k] != NULL && chained_up_flags[k][0] != '\0') {
-                    strcpy(chained_up_flags[j], chained_up_flags[k]);
-                    chained_up_flags[k][0] = '\0';
-                    break;
-                }
+void put_flags_first(char **chained_up_flags) {
+    LOGGER("put_flags_first()", "start");
+
+    // Count the number of elements
+    int num_elements = 0;
+    while (chained_up_flags[num_elements] != NULL) {
+        num_elements++;
+    }
+
+    for (int i = 1; i < num_elements; i++) {
+        if (chained_up_flags[i][0] == '\0') {
+            int j = i + 1;
+            // Find the next non-empty element
+            while (j < num_elements && chained_up_flags[j][0] == '\0') {
+                j++;
+            }
+            // If next non-empty element found, move it to current position
+            if (j < num_elements) {
+                strcpy(chained_up_flags[i], chained_up_flags[j]);
+                chained_up_flags[j][0] = '\0';
+            } else { // If next element is NULL, set current element to NULL and exit loop
+                chained_up_flags[i] = NULL;
+                break;
             }
         }
     }
+
+    // Recursively call put_flags_first for nested commands
     if (in->no_commands == 2 && second_cmd_procedure == 0) {
         second_cmd_procedure = 1;
         put_flags_first(in->cmd_two);
@@ -493,4 +505,5 @@ void end_davis()
     free_tree();
     LOGGER("end_davis", "End");
 }
+
 
