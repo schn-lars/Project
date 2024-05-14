@@ -6,14 +6,16 @@ char* command;
 char* arguments;
 char* newLine = "\n";
 char* quot = "'";
-int colorChanged = 0;
-int darkmode = 1;
+int colorChanged;
+int darkmode;
 
 int plot(char **args) {
     if (args[1] == NULL) {
         printf("Missing data.\n");
         return FAILURE;
     }
+    darkmode = 1; // set darkmode on per default
+    colorChanged = 0;
     function = malloc(sizeof(char) * 512);
     memset(function, 0, 512);
     flags = malloc(sizeof(char) * 100);
@@ -119,6 +121,9 @@ int checkFlags() {
     }
     if (strstr(flags, "s") != NULL) { // saves picture of graph as png
 
+    }
+    if (strstr(flags, "d") != NULL) { // disables darkmode
+        darkmode = 0;
     }
     return 1;
 }

@@ -115,3 +115,6 @@ Tuesday 07.05.2024: Mirco
 Implemented the flags and the color argument. Flag '-s' is still missing because I need to read into saving files a bit more.
 There is still a problem: it prints out "invalid argument" when you have more then one string for the flags.
 This is most likely because after concatinating the flags, the programm sees this as another empty argument.
+
+Wednesday 08.05.2024: Mirco
+Implemented darkmode and set it to default because it matches the theme of DAVIS more. Now I have to work on flag '-d' that can turn it off again.
