@@ -1,9 +1,5 @@
 Diary Davis:
 
-Work im progress:
-    - [Lars] ls command
-
-
 Schedule:
 
 Thursday, 28.03.2024: - Lars & Mirco
@@ -104,21 +100,17 @@ pt:7 → changes point type according to gnuplot legend
 ps:2 → changes point size relatively to default size
 lw:2 → changes line width relatively to default size
 
+Sunday 05.05.2024: Mirco
+Now all arguments except the color argument work.
+The color argument is not a 'set' command but has to be put after 'plot ...' so it has to be handled differetnly.
+Most flags have to be handled like this so it should be easy to do them the same.
+
 Monday 06.05.2024: Lars
 Today I fixed the ls command to now support printing of other directories apart from the current one.
 
 Tuesday 07.05.2024: Lars
 I implemented the additional "-e" flag for the history command. With it we can now re-execute a previously executed command.
 It seems to work after a couple of tests.
-
-Tuesday 14.05.2024: Lars
-Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.
-
-
-Sunday 05.05.2024: Mirco
-Now all arguments except the color argument work.
-The color argument is not a 'set' command but has to be put after 'plot ...' so it has to be handled differetnly.
-Most flags have to be handled like this so it should be easy to do them the same.
 
 Tuesday 07.05.2024: Mirco
 Implemented the flags and the color argument. Flag '-s' is still missing because I need to read into saving files a bit more.
@@ -127,3 +119,6 @@ This is most likely because after concatinating the flags, the programm sees thi
 
 Wednesday 08.05.2024: Mirco
 Implemented darkmode and set it to default because it matches the theme of DAVIS more. Now I have to work on flag '-d' that can turn it off again.
+
+Tuesday 14.05.2024: Lars
+Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.
