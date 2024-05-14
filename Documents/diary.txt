@@ -120,5 +120,10 @@ This is most likely because after concatinating the flags, the programm sees thi
 Wednesday 08.05.2024: Mirco
 Implemented darkmode and set it to default because it matches the theme of DAVIS more. Now I have to work on flag '-d' that can turn it off again.
 
+Tuesday 14.05.2024: Mirco
+Finished -d flag to disable darkmode and solved problem that it would be switched off after using flag once. I did the same for the default color.
+Chenged header file of plot.h to have all flags and arguments.
+
 Tuesday 14.05.2024: Lars
 Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.
+Merged the plot branch to the main and adjusted merge conflicts.
