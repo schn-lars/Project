@@ -215,7 +215,9 @@ void free_tree()
             free(curr);
             curr = curr_next;
         }
-        printf("Deleted %d nodes.\n", counter);
+        if (LOGGING == 1) {
+            printf("Deleted %d nodes.\n", counter);
+        }
     }
     free(history);
     LOGGER("free_tree", "End");
