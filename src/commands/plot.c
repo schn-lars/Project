@@ -142,11 +142,20 @@ int checkFunction() {
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
-        //TODO: maybe needs a check if input file without '' exists
-        strcpy(functionCommand, "plot ");
-        strcat(functionCommand, function);
-        strcat(command, functionCommand);
-        //sprintf(command, "plot %s \n", function);
+        printf("start of checkF\n");
+        char* functionToCheck = removeQuotes(function);
+        if (checkFile(functionToCheck)) {
+            strcpy(functionCommand, "plot ");
+            strcat(functionCommand, function);
+            strcat(command, functionCommand);
+            //sprintf(command, "plot %s \n", function);
+            free(functionToCheck);
+        } else {
+            printf("Path does not exist.\n");
+            free(functionToCheck);
+            return FAILURE;
+        }
+
     }
     else if (checkFile(function) == 0) // file does not exist -> must be a direct function (like sin(x)) -> add as is
     {
@@ -159,6 +168,31 @@ int checkFunction() {
         return FAILURE;
     }
     return 1;
+}
+
+char* removeQuotes(char *str) {
+    printf("start of removeQ\n");
+    int len = strlen(str);
+    int i, j;
+    if (str == NULL) {
+        return NULL;
+    }
+    char *result = (char *)malloc((len + 1) * sizeof(char)); // Speicher für neuen String allozieren
+    if (result == NULL) {
+        fprintf(stderr, "Speicher konnte nicht alloziert werden\n");
+        exit(1);
+    }
+    printf("result initialized\n");
+    for (i = 0, j = 0; i < len; i++) {
+        printf("for loop: %d\n", i);
+        if (str[i] != '"' && str[i] != '\'') {
+            printf("for loop char: %c\n", str[i]);
+            result[j++] = str[i];
+            printf("here lies the problem\n");
+        }
+    }
+    result[j] = '\0';
+    return result;
 }
 
 /**
