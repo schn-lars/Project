@@ -28,24 +28,31 @@ int plot(char **args) {
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
         memcpy(function, args[1], 512);
-        checkFunction();
+        if (checkFunction() == 0) {
+            return FAILURE;
+        }
         int start = 2;
-        setupArg(args,start);
+        if (setupArg(args,start) == 0) {
+            return FAILURE;
+        }
         // set Default settings
         char lines[100] = " w l ";
         strcat(command, lines);
         char grid[100] = "set grid\n";
         strcat(arguments, grid);
-        // TODO: grün als default farbe aber vor arguments machen sodass überschrebit falls costume farbe gewählt
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
             return FAILURE;
         }
         memcpy(function, args[2], 512); // take first arg that's not a flag and save it in function
-        checkFunction();
+        if (checkFunction() == 0) {
+            return FAILURE;
+        }
         int start = 3;
-        setupArg(args, start);
+        if (setupArg(args,start) == 0) {
+            return FAILURE;
+        }
         if (flags != NULL) {
             checkFlags();
         }
@@ -142,7 +149,6 @@ int checkFunction() {
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
-        printf("start of checkF\n");
         char* functionToCheck = removeQuotes(function);
         if (checkFile(functionToCheck)) {
             strcpy(functionCommand, "plot ");
@@ -171,7 +177,6 @@ int checkFunction() {
 }
 
 char* removeQuotes(char *str) {
-    printf("start of removeQ\n");
     int len = strlen(str);
     int i, j;
     if (str == NULL) {
@@ -182,13 +187,9 @@ char* removeQuotes(char *str) {
         fprintf(stderr, "Speicher konnte nicht alloziert werden\n");
         exit(1);
     }
-    printf("result initialized\n");
     for (i = 0, j = 0; i < len; i++) {
-        printf("for loop: %d\n", i);
         if (str[i] != '"' && str[i] != '\'') {
-            printf("for loop char: %c\n", str[i]);
             result[j++] = str[i];
-            printf("here lies the problem\n");
         }
     }
     result[j] = '\0';
@@ -202,6 +203,9 @@ char* removeQuotes(char *str) {
  */
 int checkFile(const char *path)
 {
+    if (path == NULL) {
+        return 0;
+    }
     // Check for file existence
     if (access(path, F_OK) == -1)
         return 0;
@@ -219,7 +223,9 @@ int setupArg(char** args, int start) {
         } else {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
             memcpy(arg, args[i], 65);
-            checkArgs(arg);
+            if (checkArgs(arg) == 0) {
+                return FAILURE;
+            }
             free(arg);
         }
     }
@@ -232,56 +238,42 @@ int checkArgs(char* arg) {
         return 0;
     }
 
-    if (strstr(arg, "title") != NULL || strstr(arg, "tit") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    int i;
+    char* extractedArg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    for (i = 0; arg[i] != ':'; i++) { // goes over argument until input comes
+        extractedArg[i] = arg[i];
+    }
+    i++;
+    extractedArg[i] = '\0';
+    if (&arg[i] == NULL) {
+        free(extractedArg);
+        return 0;
+    }
+    char* extractedInput = &arg[i];
+    // now the input for the title should be saved in extractedInput
+
+    if (strstr(extractedArg, "title") != NULL || strstr(extractedArg, "tit") != NULL) {
         char argCommand[100] = "set title '";
         strcat(extractedInput, quot);
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "xlabel") != NULL || strstr(arg, "xl") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "xlabel") != NULL || strstr(extractedArg, "xl") != NULL) {
         char argCommand[100] = "set xlabel '";
         strcat(extractedInput, quot);
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "ylabel") != NULL || strstr(arg, "yl")) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "ylabel") != NULL || strstr(extractedArg, "yl")) {
         char argCommand[100] = "set ylabel '";
         strcat(extractedInput, quot);
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "legend") != NULL || strstr(arg, "box") != NULL || strstr(arg, "key") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "legend") != NULL || strstr(extractedArg, "box") != NULL || strstr(extractedArg, "key") != NULL) {
         char argCommand[100];
         if (strstr(extractedInput, "ne") != NULL || strstr(extractedInput, "northeast") != NULL) {
            memcpy(argCommand, "set key top right\n", 25);
@@ -298,45 +290,27 @@ int checkArgs(char* arg) {
         }
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "xr") != NULL || strstr(arg, "xrange") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "xr") != NULL || strstr(extractedArg, "xrange") != NULL) {
         char argCommand[100] = "set xr ";
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "yr") != NULL || strstr(arg, "yrange") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "yr") != NULL || strstr(extractedArg, "yrange") != NULL) {
         char argCommand[100] = "set yr ";
         strcat(argCommand, extractedInput);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
     }
-    if (strstr(arg, "color") != NULL || strstr(arg, "colour") != NULL) {
-        int i;
-        for (i = 0; arg[i] != ':'; i++) {
-            //printf("%s \n", &arg[i]);
-        }
-        i++;
-        char* extractedInput = &arg[i];
-        // now the input for the title should be saved in extractedInput
+    else if (strstr(extractedArg, "color") != NULL || strstr(extractedArg, "colour") != NULL) {
         char argCommand[100] = " lc rgb '";
         strcat(argCommand, extractedInput);
         strcat(argCommand, quot);
         strcat(command, argCommand);
         colorChanged = 1;
+    } else {
+        printf("%s is not a valid argument and gets ignored.\n", arg);
     }
+    free(extractedArg);
     return 1;
 }
