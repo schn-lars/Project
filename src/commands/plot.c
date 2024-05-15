@@ -122,7 +122,7 @@ int checkFlags() {
     } else if (strstr(flags, "l") != NULL && strstr(flags, "p") != NULL && strstr(flags, "e") == NULL) { // with points and lines
         char linepoints[100] = " w lp ";
         strcat(command, linepoints);
-    } else if (strstr(flags, "l") != NULL && strstr(flags, "e") == NULL){ // per default with lines
+    } else if (strstr(flags, "l") != NULL && strstr(flags, "e") == NULL || strstr(flags, "p") == NULL){ // per default with lines
         char lines[100] = " w l ";
         strcat(command, lines);
     }
