@@ -2,9 +2,9 @@
 #define DAVIS_H
 
 
-#define MAX_INPUT_BUFFER    1024 // Including zero byte at the end
+#define MAX_INPUT_BUFFER    2048 // Including zero byte at the end
 #define MAX_COMMAND_LENGTH  10
-#define MAX_ARG_LENGTH      64
+#define MAX_ARG_LENGTH      128
 #define MAX_INPUT_COUNT     30
 #define MAX_CMD_COUNT       2
 #define LOGGING             0 // 1 = enabling logging statements

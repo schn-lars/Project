@@ -4,7 +4,7 @@
  * This is the main access point for our custom shell.
  */
 
-char input[MAX_INPUT_BUFFER];
+char *input;
 struct Input *in;
 struct Purse *purse;
 int second_cmd_procedure;
@@ -64,8 +64,9 @@ void print_davis()
  */
 void get_input() {
     printf("[DAVIS]\t");
+    input = calloc(MAX_INPUT_BUFFER + 1, sizeof(char));
     if (fgets(input, MAX_INPUT_BUFFER, stdin) == NULL) {
-        warn("Error reading input.");
+        perror("Error reading input.");
         return;
     }
     input[strcspn(input, "\n")] = '\0';
@@ -104,11 +105,12 @@ void parse_input_into_commands() {
 
         char *tmp = strtok_r(first_half, " ", &saveptr);
         while (tmp != NULL) {
-            if (arg_counter >= MAX_INPUT_COUNT) {
+            if (arg_counter >= MAX_INPUT_COUNT - 1) {
                 warn("You exceeded argument count on the first command!");
                 break;
             }
-            strcpy(in->cmd_one[arg_counter], tmp);
+            strncpy(in->cmd_one[arg_counter], tmp, MAX_ARG_LENGTH);
+            in->cmd_one[arg_counter][MAX_ARG_LENGTH] = '\0';
             arg_counter++;
             tmp = strtok_r(NULL, " ", &saveptr);
         }
@@ -118,11 +120,12 @@ void parse_input_into_commands() {
         // We have reached the end of the first command
         tmp = strtok_r(second_half, " ", &saveptr);
         while (tmp != NULL) {
-            if (arg_counter >= MAX_INPUT_COUNT) {
+            if (arg_counter >= MAX_INPUT_COUNT - 1) {
                 warn("You exceeded argument count on the second command!");
                 break;
             }
-            strcpy(in->cmd_two[arg_counter], tmp);
+            strncpy(in->cmd_two[arg_counter], tmp, MAX_ARG_LENGTH);
+            in->cmd_two[arg_counter][MAX_ARG_LENGTH] = '\0';
             arg_counter++;
             tmp = strtok_r(NULL, " ", &saveptr);
         }
@@ -136,14 +139,16 @@ void parse_input_into_commands() {
                 warn("You exceeded argument count on the command!");
                 break;
             }
-            strcpy(in->cmd_one[arg_counter], tmp);
+            strncpy(in->cmd_one[arg_counter], tmp, MAX_ARG_LENGTH);
+            in->cmd_one[arg_counter][MAX_ARG_LENGTH] = '\0';
             arg_counter++;
             tmp = strtok(NULL, " ");
         }
         in->cmd_one[arg_counter] = NULL;
         in->no_commands = 1;
     }
-    free(input_copy); // Freigeben der Kopie der Eingabe
+    free(input_copy); // free copy of input
+    free(input);
     LOGGER("End of parsing.", "");
 }
 
@@ -158,26 +163,6 @@ void exec_command() {
         warn("Please enter a valid input.");
         return;
     }
-
-    int shm_fd = shm_open(SCRATCH_FILE, O_CREAT | O_RDWR, 0666);
-    if (shm_fd < 0) {
-        perror("shm_fd");
-        return;
-    }
-
-    if (ftruncate(shm_fd, sizeof(int)) < 0) {
-        perror("ftruncate");
-        return;
-    }
-
-    void* shm_ptr = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (shm_ptr == MAP_FAILED) {
-        perror("mmap");
-        return;
-    }
-
-    int* shm_exe_ptr = (int*)shm_ptr;
-    shm_exe_ptr[0] = 1;
 
     if (in->no_commands == 2) { // Piping
         LOGGER("Piping: ","Start");
@@ -206,7 +191,6 @@ void exec_command() {
             if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                 warn("First command failed.");
                 printf("Fail %s", in->cmd_one[0]);
-                *shm_exe_ptr = 0;
                 exit(0);
             } else {
                 LOGGER("execute_cmd()", "First command done\n");
@@ -230,17 +214,30 @@ void exec_command() {
                 if (execvp(in->cmd_two[0], in->cmd_two) < 0) {
                     warn("Second command failed.");
                     printf("Fail %s", in->cmd_two[0]);
-                    *shm_exe_ptr = 0;
                     exit(0);
                 } else {
-                    printf("2nd command successful: %d\n", shm_exe_ptr[0]);
                     exit(SUCCESS);
                 }
             } else {
                 close(fd[0]); // Close both ends of pipe in parent
                 close(fd[1]);
-                wait(NULL);
-                wait(NULL);
+                int status;
+                waitpid(p1, &status, 0); // Warte auf p1
+                if (WIFEXITED(status)) {
+                    if (WEXITSTATUS(status) != 0) {
+                        executed = 0;
+                    }
+                } else {
+                    executed = 0;
+                }
+                waitpid(p2, &status, 0); // Warte auf p2
+                if (WIFEXITED(status)) {
+                    if (WEXITSTATUS(status) != 0) {
+                        executed = 0;
+                    }
+                } else {
+                    executed = 0;
+                }
             }
         }
     } else {
@@ -265,12 +262,6 @@ void exec_command() {
             executed = hist(in);
             if (executed == 2) { // successful -e command
                 LOGGER("exe_command()", "successful prev command");
-                if (munmap(shm_ptr, sizeof(int)) == -1) {
-                    perror("munmap");
-                    exit(FAILURE);
-                }
-                close(shm_fd);
-                unlink(SCRATCH_FILE);
                 exec_command();
                 return;
             }
@@ -283,34 +274,34 @@ void exec_command() {
         } else {
             LOGGER("exe_command()","System command executing ...");
             pid_t sys_cmd = fork();
+            int status;
             if (sys_cmd == -1) {
                 warn("Forking system command process failed.");
             }
             if (sys_cmd == 0) {
                 if (execvp(in->cmd_one[0], in->cmd_one) < 0) {
                     warn("Could not execute command.");
-                    exit(0);
+                    exit(-1);
                 } else {
                     printf("System command was successful.\n");
-                    *shm_exe_ptr += 1;
                     exit(SUCCESS);
                 }
             } else {
-                wait(NULL);
+                // wait(NULL);
+                waitpid(sys_cmd, &status, 0); // Warten auf den Kindprozess und Exit-Status abfangen
+                if (WIFEXITED(status)) {
+                    if (WEXITSTATUS(status) != 0) {
+                        executed = 0;
+                    }
+                } else {
+                    executed = 0;
+                    LOGGER("Exe_command()","Child process terminated abnormally\n");
+                }
             }
         }
     }
     purse->points += (in->no_commands + executed) * MAX_INPUT_COUNT;
-    if (!(executed == 1 && shm_exe_ptr[0] == 1)) {
-        executed = 0;
-    }
     hist_add(in, executed);
-    if (munmap(shm_ptr, sizeof(int)) == -1) {
-        perror("munmap");
-        exit(FAILURE);
-    }
-    close(shm_fd);
-    unlink(SCRATCH_FILE);
     clear_input_struct();
     printf("\n");
 }
@@ -334,7 +325,8 @@ void sort_flags_in_arguments(char **parsed_input)
     for (int j = 1; j < MAX_INPUT_COUNT; j++) { // first pick flags
         if (parsed_input[j] != NULL) {
             if (parsed_input[j][0] == '-') {
-                strcpy(tmp_flags[flagCounter], parsed_input[j]);
+                strncpy(tmp_flags[flagCounter], parsed_input[j], MAX_ARG_LENGTH);
+                tmp_flags[flagCounter][MAX_ARG_LENGTH] = '\0';
                 parsed_input[j][0] = '\0';
                 flagCounter++;
             }
@@ -345,7 +337,8 @@ void sort_flags_in_arguments(char **parsed_input)
     LOGGER("Sorting", "non-empty");
     for (int j = 1; j < MAX_INPUT_COUNT; j++) { // secondly pick non-empty spots
         if (parsed_input[j] != NULL && parsed_input[j][0] != '\0') {
-            strcpy(tmp_flags[flagCounter], parsed_input[j]);
+            strncpy(tmp_flags[flagCounter], parsed_input[j], MAX_ARG_LENGTH);
+            tmp_flags[flagCounter][MAX_ARG_LENGTH] = '\0';
             parsed_input[j][0] = '\0';
             flagCounter++;
         }

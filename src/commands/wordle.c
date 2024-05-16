@@ -147,6 +147,7 @@ void get_word()
             } else {
                 if (strcmp(input_word, "-help") == 0) {
                     print_help();
+                    return;
                 } else if (strcmp(input_word, "-true") == 0) {
                     if (player_purse->points >= 200) {
                         hint_true();
