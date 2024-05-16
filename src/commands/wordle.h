@@ -15,9 +15,11 @@
 #include <time.h>
 #include "../davis.h"
 #include <unistd.h>
+#include <ctype.h>
 
 #define WORD_LENGTH     5
 #define WORD_COUNT      6
+#define WORDLE_BUFFER   100
 #define WORD_FILE       "../resources/wordle_list.txt"
 #define WORDS           2309
 
@@ -40,5 +42,6 @@ void print_help();
 void hint_true();
 void hint_semi();
 int max(int a, int b);
+int contains_non_letters(char *input);
 
 #endif

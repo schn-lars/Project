@@ -67,6 +67,7 @@ void get_input() {
     input = calloc(MAX_INPUT_BUFFER + 1, sizeof(char));
     if (fgets(input, MAX_INPUT_BUFFER, stdin) == NULL) {
         perror("Error reading input.");
+        free(input);
         return;
     }
     input[strcspn(input, "\n")] = '\0';
@@ -257,6 +258,17 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "plot") == 0) {
             LOGGER("Calling plot: ", in->cmd_one[0]);
             executed = plot(in->cmd_one);
+        } else if (strcmp(in->cmd_one[0], "cd") == 0) {
+            LOGGER("Calling cd: ", in->cmd_one[0]);
+            if (in->cmd_one[1] != NULL) {
+                if (chdir(in->cmd_one[1]) != 0) {
+                    executed = 0;
+                }
+            } else {
+                if (chdir("." ) != 0) {
+                    executed = 0;
+                }
+            }
         } else if (strcmp(in->cmd_one[0], "hist") == 0) {
             LOGGER("Calling hist: ", in->cmd_one[0]);
             executed = hist(in);

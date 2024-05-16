@@ -127,3 +127,8 @@ Chenged header file of plot.h to have all flags and arguments.
 Tuesday 14.05.2024: Lars
 Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.
 Merged the plot branch to the main and adjusted merge conflicts.
+
+Thursday 16.05.2024: Lars
+Today I added the chdir command. Additionally, I went over the command parsing and fixed some vulnerabilites regarding
+segmentation faults or stack smashing. I think I got everything covered as an input. Moreover, I added a method
+checking if a word for wordle contains special characters.

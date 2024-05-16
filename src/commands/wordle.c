@@ -1,7 +1,7 @@
 #include "wordle.h"
 
 struct Word *game[WORD_COUNT];
-char input_word[MAX_INPUT_BUFFER + 1];
+char *input_word;
 char solution[WORD_LENGTH + 1];
 int guesses = 0;
 int state = 0;
@@ -124,14 +124,17 @@ void get_word()
 {
     printf("[WORDLE] ");
     while (1) {
-        if (fgets(input_word, MAX_INPUT_BUFFER, stdin) == NULL) {
+        input_word = calloc(WORDLE_BUFFER + 1, sizeof(char));
+        if (fgets(input_word, WORDLE_BUFFER, stdin) == NULL) {
             warn("Error reading input.");
+            free(input_word);
             return;
         }
         input_word[strcspn(input_word, "\n")] = '\0'; // Entferne das Zeilenumbruchzeichen
 
         if (strcmp(input_word, "quit") == 0) {
             state = -1;
+            free(input_word);
             return;
         } else {
             int word_count = 0;
@@ -140,13 +143,15 @@ void get_word()
                 word_count++;
                 token = strtok(NULL, " ");
             }
-            if ((word_count == 1 && strlen(input_word) == 5) && input_word[0] != '-') {
+            if ((word_count == 1 && strlen(input_word) == 5) && input_word[0] != '-' && contains_non_letters(input_word) == 0) {
                 put_input_into_game();
                 set_state();
+                free(input_word);
                 return;
             } else {
                 if (strcmp(input_word, "-help") == 0) {
                     print_help();
+                    free(input_word);
                     return;
                 } else if (strcmp(input_word, "-true") == 0) {
                     if (player_purse->points >= 200) {
@@ -154,7 +159,6 @@ void get_word()
                         player_purse->points -= 200;
                     } else {
                         printf("Not enough points! You have: %d points.\n", player_purse->points);
-                        printf("[WORDLE] ");
                     }
                 } else if (strcmp(input_word, "-semi") == 0) {
                     if (player_purse->points >= 130) {
@@ -162,18 +166,29 @@ void get_word()
                         player_purse->points -= 130;
                     } else {
                         printf("Not enough points! You have: %d points.\n", player_purse->points);
-                        printf("[WORDLE] ");
                     }
                 } else {
                     warn("Invalid input. Please enter a command or a single word with exactly 5 characters.");
-                    printf("[WORDLE] ");
+                    free(input_word);
                     return;
                 }
                 set_state();
+                free(input_word);
                 return;
             }
         }
     }
+}
+
+int contains_non_letters(char *input) {
+    int index = 0;
+    while (index < WORDLE_BUFFER && input[index] != '\0') {
+        if (!isalpha(input[index])) {
+            return 1;
+        }
+        index++;
+    }
+    return 0;
 }
 
 void put_input_into_game()
