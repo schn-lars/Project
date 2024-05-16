@@ -67,7 +67,7 @@ int ls(char **args) // l = 1, a = 2, al = 3
         struct stat *file_stat = malloc(sizeof(struct stat));
         char full_path[1024];
         snprintf(full_path, sizeof(full_path), "%s/%s", path, directory_entry->d_name);
-        if (stat(full_path, file_stat) == -1) {
+        if (lstat(full_path, file_stat) == -1) {
             perror("stat");
             LOGGER("Stat-ls()", full_path);
             return FAILURE;
@@ -124,7 +124,9 @@ void display_list_header()
  */
 void display_as_list(struct stat *stat_file, struct dirent *entry)
 {
-    if (entry->d_type == DT_DIR) { // is it a directory
+    if (S_ISLNK(stat_file->st_mode) ) { // symbolic link
+        printf("\x1b[33m" "%-*s\t" "\x1b[0m", file_name_size, entry->d_name);
+    } else if (entry->d_type == DT_DIR) { // directory
         LOGGER("display_as_list() Folder", entry->d_name);
         printf("\x1b[34m" "%-*s\t" "\x1b[0m", file_name_size, entry->d_name);
     } else if (stat_file->st_mode & S_IXUSR || stat_file->st_mode & S_IXGRP || stat_file->st_mode & S_IXOTH) {
@@ -225,7 +227,9 @@ char *permissions_to_string(mode_t mode)
 
 void print_regular(struct dirent *directory_entry, struct stat *file_stat)
 {
-    if (directory_entry->d_type == DT_DIR) { // is it a directory
+    if (S_ISLNK(file_stat->st_mode) ) {
+        printf("\x1b[33m" "%s  " "\x1b[0m", directory_entry->d_name);
+    } else if (directory_entry->d_type == DT_DIR) { // is it a directory
         printf("\x1b[34m" "%s  " "\x1b[0m", directory_entry->d_name);
     } else if (file_stat->st_mode & S_IXUSR || file_stat->st_mode & S_IXGRP || file_stat->st_mode & S_IXOTH) {
         // executeable

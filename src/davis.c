@@ -312,6 +312,7 @@ void exec_command() {
     close(shm_fd);
     unlink(SCRATCH_FILE);
     clear_input_struct();
+    printf("\n");
 }
 
 /*
