@@ -8,14 +8,18 @@ char* newLine = "\n";
 char* quot = "'";
 int colorChanged;
 int darkmode;
+int titleSet;
+char* title;
 
 int plot(char **args) {
     if (args[1] == NULL) {
         printf("Missing data.\n");
         return FAILURE;
     }
+    title = malloc(sizeof(char) * 512);
     darkmode = 1; // set darkmode on per default
-    colorChanged = 0;
+    colorChanged = 0; // if the color was changed with an argument
+    titleSet = 0; // if the title was set with an argument
     function = malloc(sizeof(char) * 512);
     memset(function, 0, 512);
     flags = malloc(sizeof(char) * 100);
@@ -82,6 +86,42 @@ int plot(char **args) {
     }
     fprintf(gnuplotPipe, "%s", command);
     fflush(gnuplotPipe);
+    printf("bevor -s\n");
+    if (args[1][0] == '-' && strstr(flags, "s") != NULL) { // saves picture of graph as png
+        printf("start of -s\n");
+        char* savecommand = calloc( 512, sizeof(char));
+        char* nameToCheck = calloc( 512, sizeof(char));
+        strcpy(savecommand, "set term pngcairo\nset output '");
+        strcpy(nameToCheck, "./");
+        if (titleSet != 1 || title == NULL) { // there is no title, so we name it per Default DAVIS_plot
+            strcpy(title, "DAVIS_plot");
+        }
+        strcpy(nameToCheck, title);
+        int i= 0;
+        char* numb = calloc(100, sizeof(char));
+        while(checkFile(nameToCheck) != 0) {
+            char *token = strtok(nameToCheck, "(");
+            if (token != NULL) {
+                strcpy(nameToCheck, token);
+            }
+            sprintf(numb,"(%d)", ++i);
+            strcat(nameToCheck, numb);
+            printf("NametoCheck: %s\n", nameToCheck);
+        }
+        if (i != 0) {
+            sprintf(numb,"(%d)", i);
+            strcat(title, numb);
+            printf("title: %s\n", title);
+        }
+        strcat(savecommand, title);
+        strcat(savecommand, "'\nreplot\n");
+        printf("save Command: %s\n", savecommand);
+        fprintf(gnuplotPipe, "%s", savecommand);
+        fflush(gnuplotPipe);
+        free(savecommand);
+        free(nameToCheck);
+    }
+    printf("nach -s\n");
     fprintf(gnuplotPipe, "exit\n");
 
     pclose(gnuplotPipe);
@@ -91,6 +131,7 @@ int plot(char **args) {
     free(flags);
     free(command);
     free(arguments);
+    free(title);
     return SUCCESS;
 }
 
@@ -125,9 +166,6 @@ int checkFlags() {
     } else if (strstr(flags, "l") != NULL && strstr(flags, "e") == NULL || strstr(flags, "p") == NULL){ // per default with lines
         char lines[100] = " w l ";
         strcat(command, lines);
-    }
-    if (strstr(flags, "s") != NULL) { // saves picture of graph as png
-
     }
     if (strstr(flags, "d") != NULL) { // disables darkmode
         darkmode = 0;
@@ -254,10 +292,12 @@ int checkArgs(char* arg) {
 
     if (strstr(extractedArg, "title") != NULL || strstr(extractedArg, "tit") != NULL) {
         char argCommand[100] = "set title '";
-        strcat(extractedInput, quot);
+        strcpy(title, extractedInput);
         strcat(argCommand, extractedInput);
+        strcat(argCommand, quot);
         strcat(argCommand, newLine);
         strcat(arguments, argCommand);
+        titleSet = 1;
     }
     else if (strstr(extractedArg, "xlabel") != NULL || strstr(extractedArg, "xl") != NULL) {
         char argCommand[100] = "set xlabel '";
@@ -279,13 +319,13 @@ int checkArgs(char* arg) {
            memcpy(argCommand, "set key top right\n", 25);
         } else if (strstr(extractedInput, "nw") != NULL || strstr(extractedInput, "northwest") != NULL) {
             memcpy(argCommand, "set key top left\n", 25);
-        } else if (strstr(extractedInput, "nc") != NULL || strstr(extractedInput, "north") != NULL) {
+        } else if (strstr(extractedInput, "nc") != NULL || strstr(extractedInput, "northcenter") != NULL) {
             memcpy(argCommand, "set key top center\n", 25);
         } else if (strstr(extractedInput, "se") != NULL || strstr(extractedInput, "southeast") != NULL) {
             memcpy(argCommand, "set key bottom right\n", 25);
         } else if (strstr(extractedInput, "sw") != NULL || strstr(extractedInput, "southwest") != NULL) {
             memcpy(argCommand, "set key bottom left\n", 25);
-        } else if (strstr(extractedInput, "sc") != NULL || strstr(extractedInput, "south") != NULL) {
+        } else if (strstr(extractedInput, "sc") != NULL || strstr(extractedInput, "southcenter") != NULL) {
             memcpy(argCommand, "set key bottom center\n", 25);
         }
         strcat(arguments, argCommand);
