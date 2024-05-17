@@ -8,7 +8,7 @@
  *      -l -> graph with lines
  *      -l & -p → graph with lines and points
  *      -d → disables darkmode
- *      -s → saves graph as png directly
+ *      -s → saves graph as png directly. The file name is per default "DAVIS_plot" or the title if one is set (duplicates get incremented numbers added)
  *  Possible arguments (most arguments work with their short form SF or alternativ form AF):
  *      title:<title> → sets the title of the graph (SF tit)
  *      xlabel:<xlabel> → sets the horizontal xlabel (SF xl)
