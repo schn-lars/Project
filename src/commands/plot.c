@@ -86,9 +86,7 @@ int plot(char **args) {
     }
     fprintf(gnuplotPipe, "%s", command);
     fflush(gnuplotPipe);
-    printf("bevor -s\n");
     if (args[1][0] == '-' && strstr(flags, "s") != NULL) { // saves picture of graph as png
-        printf("start of -s\n");
         char* savecommand = calloc( 512, sizeof(char));
         char* nameToCheck = calloc( 512, sizeof(char));
         strcpy(savecommand, "set term pngcairo\nset output '");
@@ -106,24 +104,19 @@ int plot(char **args) {
             }
             sprintf(numb,"(%d)", ++i);
             strcat(nameToCheck, numb);
-            printf("NametoCheck: %s\n", nameToCheck);
         }
         if (i != 0) {
             sprintf(numb,"(%d)", i);
             strcat(title, numb);
-            printf("title: %s\n", title);
         }
         strcat(savecommand, title);
         strcat(savecommand, "'\nreplot\n");
-        printf("save Command: %s\n", savecommand);
         fprintf(gnuplotPipe, "%s", savecommand);
         fflush(gnuplotPipe);
         free(savecommand);
         free(nameToCheck);
     }
-    printf("nach -s\n");
     fprintf(gnuplotPipe, "exit\n");
-
     pclose(gnuplotPipe);
 
     // Free everything
