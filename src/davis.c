@@ -258,6 +258,9 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "plot") == 0) {
             LOGGER("Calling plot: ", in->cmd_one[0]);
             executed = plot(in->cmd_one);
+        } else if (strcmp(in->cmd_one[0], "echo") == 0) {
+            LOGGER("Calling echo: ", in->cmd_one[0]);
+            executed = echo(in->cmd_one);
         } else if (strcmp(in->cmd_one[0], "cd") == 0) {
             LOGGER("Calling cd: ", in->cmd_one[0]);
             if (in->cmd_one[1] != NULL) {
