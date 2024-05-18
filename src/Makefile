@@ -4,3 +4,4 @@ test:
 	gcc test_parsing.c
 clear:
 	rm *.o
+	rm *.out

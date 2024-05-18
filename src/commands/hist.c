@@ -74,6 +74,10 @@ int initialize_history()
 void hist_add(struct Input *input, int executed)
 {
     pthread_mutex_lock(&history_mutex);
+    if (history->size >= INT_MAX) {
+        free_tree();
+        initialize_history();
+    }
     struct Node *newNode = create_node(input, executed);
     LOGGER("hist_add()", "created new Node");
     if (newNode == NULL) {
@@ -220,6 +224,7 @@ void free_tree()
         }
     }
     free(history);
+    pthread_mutex_destroy(&history_mutex);
     LOGGER("free_tree", "End");
 }
 

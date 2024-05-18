@@ -20,6 +20,7 @@
 #define YELLOW              "\x1b[33m"
 
 #include "../davis.h"
+#include <limits.h>
 
 struct Node {
     struct Node *prev;

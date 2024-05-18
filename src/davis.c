@@ -30,7 +30,11 @@ int main()
 void davis()
 {
     printf("Hey, I'm DAVIS. How may I assist You?\n");
-    purse->points = 10000;
+    if (LOGGING == 1) {
+        purse->points = 10000;
+    } else {
+        purse->points = 100;
+    }
     shell_running = 1;
     while (shell_running) {
         get_input(); // ls q w -l e -o -p
@@ -512,6 +516,7 @@ void end_davis()
 {
     LOGGER("end_davis()", "Start");
     free_tree();
+    free(purse);
     LOGGER("end_davis", "End");
 }
 
