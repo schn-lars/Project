@@ -28,6 +28,7 @@ struct Purse {
 #include "commands/clear.h"
 #include "commands/plot.h"
 #include "commands/echo.h"
+#include "commands/latex.h"
 #include "commands/hist.h"
 #include "commands/wordle.h"
 #include <stdio.h>
