@@ -113,6 +113,7 @@ int plot(char **args) {
         strcat(savecommand, "'\nreplot\n");
         fprintf(gnuplotPipe, "%s", savecommand);
         fflush(gnuplotPipe);
+        free(numb);
         free(savecommand);
         free(nameToCheck);
     }
@@ -213,9 +214,9 @@ char* removeQuotes(char *str) {
     if (str == NULL) {
         return NULL;
     }
-    char *result = (char *)malloc((len + 1) * sizeof(char)); // Speicher für neuen String allozieren
+    char *result = (char *)malloc((len + 1) * sizeof(char));
     if (result == NULL) {
-        fprintf(stderr, "Speicher konnte nicht alloziert werden\n");
+        fprintf(stderr, "could not malloc space\n");
         exit(1);
     }
     for (i = 0, j = 0; i < len; i++) {
