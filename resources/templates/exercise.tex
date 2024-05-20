@@ -1,0 +1,49 @@
+%% General definitions
+\documentclass{article} %% Determines the general format.
+\usepackage{a4wide} %% paper size: A4.
+\usepackage[utf8]{inputenc} %% This file is written in UTF-8.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{pgf}
+\usepackage[T1]{fontenc} %% Format of the resulting PDF file.
+\usepackage{fancyhdr} %% Package to create a header on each page.
+\usepackage{lastpage} %% Used for "Page X of Y" in the header.
+\usepackage{amssymb}
+\usepackage{tikz}  %% Pagacke to create graphics (graphs, automata, etc.)
+\usetikzlibrary{arrows}   %% Tikz library for nicer arrow heads
+\usepackage{lipsum}  %% this is only for template, can be deleted
+
+%% Left side of header
+\lhead{\course\\\semester\\Exercise \homeworkNumber}
+%% Right side of header
+\rhead{\authorname\\Page \thepage\ of \pageref{LastPage}}
+%% Height of header
+\usepackage[headheight=36pt]{geometry}
+%% Page style that uses the header
+\pagestyle{fancy}
+
+\newcommand{\authorname}{<author>}
+\newcommand{\semester}{Semester 202X}
+\newcommand{\course}{<course>}
+\newcommand{\homeworkNumber}{<exNumb>}
+
+
+\begin{document}
+
+\section{Task}
+This is the first task with some text.
+\lipsum[1-2]
+
+\section{Task}
+This is the second task with a picture included.
+\lipsum[2-3]
+%% picture
+\begin{figure}[h]
+    \centering
+    %% upload a png to the LaTeX file and change the name
+    \includegraphics[]{example.png}
+    \caption{This is an example how you include pictures.}
+    \label{fig:example}
+\end{figure}
+
+\end{document}
