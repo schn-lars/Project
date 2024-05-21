@@ -22,5 +22,6 @@ int latex(char **args);
 int checkFile(const char *path);
 char* removeQuotes(char* str);
 char* removeSuffix(char* filename, char* suffix);
+int copyFileContents(const char *sourcePath, FILE *destFile);
 
 #endif

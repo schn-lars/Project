@@ -36,10 +36,19 @@ int latex(char **args) {
     }
     // now pathToCheck contains the next free filename that can be given
     printf("right name: %s", pathToCheck);
-    FILE *file = fopen(pathToCheck, "a");
+    FILE *file = fopen(pathToCheck, "w+"); // creates new file
     if (file == NULL) {
         warn("ERROR: Could not create file.");
+        free(pathToCheck);
         return FAILURE;
+    }
+    // check which template is chosen
+    if (strstr(args[2], "exercise") != NULL) {
+        if (copyFileContents("../resources/templates/exercise.tex", file) == FAILURE) {
+            fclose(file);
+            free(pathToCheck);
+            return FAILURE;
+        }
     }
     free(pathToCheck);
     return SUCCESS;
@@ -56,4 +65,32 @@ char* removeSuffix(char* filename, char* suffix) {
     } else {
         return 0;
     }
+}
+
+int copyFileContents(const char *sourcePath, FILE *destFile) {
+    FILE *sourceFile = fopen(sourcePath, "r");
+    if (sourceFile == NULL) {
+        perror("Could not find the template in DAVIS or could not open dest");
+        return FAILURE;
+    }
+
+    char buffer[1024];
+    size_t bytesRead; // number of Bytes
+
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), sourceFile)) > 0) { // reads until fread reads less than a Byte
+        if (fwrite(buffer, 1, bytesRead, destFile) != bytesRead) {
+            perror("ERROR - could not successfully write to file");
+            fclose(sourceFile);
+            return FAILURE;
+        }
+    }
+
+    if (ferror(sourceFile)) {
+        perror("ERROR - could not read out successfully from source file");
+        fclose(sourceFile);
+        return FAILURE;
+    }
+
+    fclose(sourceFile);
+    return SUCCESS;
 }
