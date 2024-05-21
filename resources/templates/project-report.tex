@@ -1,3 +1,4 @@
+
 %% General definitions
 \documentclass{article} %% Determines the general format.
 \usepackage{a4wide} %% paper size: A4.
@@ -16,18 +17,13 @@
 \usepackage{lipsum}  %% this is only for template, can be deleted
 
 %% Left side of header
-\lhead{\course\\\semester\\Report \report}
+\lhead{\course\\\semester\\Report \titlename}
 %% Right side of header
 \rhead{\authorname\\Page \thepage\ of \pageref{LastPage}}
 %% Height of header
 \usepackage[headheight=36pt]{geometry}
 %% Page style that uses the header
 \pagestyle{fancy}
-
-\newcommand{\authorname}{<author>}
-\newcommand{\semester}{Semester 202X}
-\newcommand{\course}{<course>}
-\newcommand{\report}{<title>}
 
 
 \begin{document}
@@ -38,11 +34,11 @@
         \vspace*{1cm}
 
         \Huge
-        \textbf{<title>}
+        \textbf{\titlename}
 
         \vspace{0.5cm}
         \LARGE
-        <subtitle>
+        \subtitlename
 
         \vspace{1.5cm}
 
@@ -51,16 +47,16 @@
         \vspace{1.5cm}
 
         Project for the course\\
-        <course> by\\
-        \textbf{<author>}
+        \course by\\
+        \textbf{\authorname}
 
         \vfill
         \includegraphics[width=0.3\textwidth]{logo.png}
 
         \Large
-        University <university name>\\
+        University \uniname\\
         Switzerland\\
-        Semester 202X
+        \semester
 
     \end{center}
 \end{titlepage}
