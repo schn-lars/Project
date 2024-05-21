@@ -250,8 +250,7 @@ int setupArg(char** args, int start) {
     for (i = start; args[i] != NULL; i++) { // go over rest of arguments if existing
         // add effect of argument to command
         if (strstr(args[i], ":") == NULL) {
-            printf("invalid arguments\n");
-            return FAILURE;
+            printf("%s is not a valid argument and gets ignored.\n", args[i]);
         } else {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
             memcpy(arg, args[i], 65);
