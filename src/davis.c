@@ -1,4 +1,5 @@
 #include "davis.h"
+#include "commands/latex.h"
 
 /*
  * This is the main access point for our custom shell.
@@ -340,6 +341,9 @@ void exec_command() {
         } else if (strcmp(in->cmd_one[0], "echo") == 0) {
             LOGGER("Calling echo: ", in->cmd_one[0]);
             executed = echo(in->cmd_one);
+        } else if (strcmp(in->cmd_one[0], "latex") == 0) {
+            LOGGER("Calling latex: ", in->cmd_one[0]);
+            executed = latex(in->cmd_one);
         } else if (strcmp(in->cmd_one[0], "cd") == 0) {
             LOGGER("Calling cd: ", in->cmd_one[0]);
             if (in->cmd_one[1] != NULL) {

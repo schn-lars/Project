@@ -122,16 +122,29 @@ Implemented darkmode and set it to default because it matches the theme of DAVIS
 
 Tuesday 14.05.2024: Mirco
 Finished -d flag to disable darkmode and solved problem that it would be switched off after using flag once. I did the same for the default color.
-Chenged header file of plot.h to have all flags and arguments.
+Changed header file of plot.h to have all flags and arguments.
 
 Tuesday 14.05.2024: Lars
 Fixed a bug inside the parsing methods. Now commands using multiple flags are zeroterminated correctly.
 Merged the plot branch to the main and adjusted merge conflicts.
 
+Wednesday 15.05.2024: Mirco
+Added another check to checkFuntion() in plot() that checks the given path without "" too.
+I went over all helping methods in plot() and decided what should be a FAILURE and what SUCCESS and added a bit of errorhandling acordingly.
+
 Thursday 16.05.2024: Lars
 Today I added the chdir command. Additionally, I went over the command parsing and fixed some vulnerabilites regarding
 segmentation faults or stack smashing. I think I got everything covered as an input. Moreover, I added a method
 checking if a word for wordle contains special characters.
+
+Thursday 16.05.2024: Mirco
+There was a mistake with the branches and one commit (from the 14.05.2024) was on a separate plot-branch even after merging.
+Instead of merging and risking any bugs I just did the small changes on the main-branch and commited again.
+
+Friday 17.05.2024: Mirco
+I finally achieved that the -s flag checks if the name of the new graph already exists and then adds a number behind it (e.g. DAVIS_plot -> DAVIS_plot(1)), so it doesn't overwrite the picture.
+GNUplot originally just replaces the png without asking, but we thought it would be nicer of DAVIS to save it with another name.
+Also started with adding an echo.c command to the commands directory.
 
 Saturday 18.05.2024: Lars
 I implemented the system command 'echo' and added some flags to it to modify the looks of the output. Now you can add

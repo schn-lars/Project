@@ -1,0 +1,137 @@
+%% General definitions
+\documentclass{article} %% Determines the general format.
+\usepackage{a4wide} %% paper size: A4.
+\usepackage[utf8]{inputenc} %% This file is written in UTF-8.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{pgf}
+\usepackage[T1]{fontenc} %% Format of the resulting PDF file.
+\usepackage{fancyhdr} %% Package to create a header on each page.
+\usepackage{lastpage} %% Used for "Page X of Y" in the header.
+\usepackage{amssymb}
+\usepackage{tikz}  %% Pagacke to create graphics (graphs, automata, etc.)
+\usetikzlibrary{arrows}   %% Tikz library for nicer arrow heads
+\usepackage[base]{babel} %%language support
+\usepackage{hyperref}
+\usepackage{lipsum}  %% this is only for template, can be deleted
+
+%% Left side of header
+\lhead{\course\\\semester\\Report \report}
+%% Right side of header
+\rhead{\authorname\\Page \thepage\ of \pageref{LastPage}}
+%% Height of header
+\usepackage[headheight=36pt]{geometry}
+%% Page style that uses the header
+\pagestyle{fancy}
+
+\newcommand{\authorname}{<author>}
+\newcommand{\semester}{Semester 202X}
+\newcommand{\course}{<course>}
+\newcommand{\report}{<title>}
+
+
+\begin{document}
+
+%% titlepage for the report
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+
+        \Huge
+        \textbf{<title>}
+
+        \vspace{0.5cm}
+        \LARGE
+        <subtitle>
+
+        \vspace{1.5cm}
+
+        \includegraphics[]{report_picture.png}
+
+        \vspace{1.5cm}
+
+        Project for the course\\
+        <course> by\\
+        \textbf{<author>}
+
+        \vfill
+        \includegraphics[width=0.3\textwidth]{logo.png}
+
+        \Large
+        University <university name>\\
+        Switzerland\\
+        Semester 202X
+
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+\\
+
+\section{Introduction}
+Introduce the problem you are trying to solve, motivate why solving this
+problem is important, highlight the significance of solving this problem. (What are you trying to
+do and why?).\\
+\lipsum[1-1] %% showtext that can be deleted
+
+\section{Background}
+Introduces relevant background knowledge to understand your work (e.g.,
+existing algorithms, protocols, software, and technologies).\\
+\lipsum[1-1] %% showtext that can be deleted
+\clearpage
+
+\section{Methodology}
+Conceptual explanation of implementation, configuration, and setup. (May use
+code snippets to explain concepts, but not full code listings.)\\
+\lipsum[1-2]
+\clearpage
+
+\section{Results}
+Show the result/capabilities of your solution through plots, tables, screenshots, etc.
+\subsection{first results}
+\lipsum[1-2]
+\subsection{second results}
+\lipsum[1-1]
+%% picture
+\begin{figure}[h]
+    \centering
+    %% upload a png to the LaTeX file and change the name
+    \includegraphics[]{example.png}
+    \caption{This is an example how you include pictures.}
+    \label{fig:example}
+\end{figure}
+
+\section{Discussion}
+Discuss the achieved results (good and bad) and their meaning.\\
+\lipsum[1-2]
+\clearpage
+
+\section{Conclusion}
+Summarize what has been achieved, what is left open from your initial plan, and
+how your solution could be further developed through future work.\\
+\lipsum[1-2]
+\clearpage
+
+\section{Lessons learned}
+What did you learn during the project? Which skills did you acquire? What
+did you learn about yourself and your role in a team software development project?\\
+\lipsum[1-3]
+\clearpage
+
+\section{References}
+List all references, including third-party software and libraries (check software
+release licenses about usage permissions).
+\begin{itemize}
+    \item \href{https://www.google.com}{Google}
+    \item \href{https://stackoverflow.com}{Stackoverflow}
+    \item \href{https://chatgpt.com}{ChatGPT}
+\end{itemize}
+\lipsum[1-1]
+
+\section{Appendix}
+Declaration of Independent Authorship and any additional
+information (e.g., plots, tables, screenshots) that did not make it into the results section but
+are still relevant.\\
+\lipsum[1-1]
+
+\end{document}
