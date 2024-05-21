@@ -11,9 +11,7 @@ int echo(char **args) {
     }
     int redirect = check_for_redirect(args);
     if (redirect != -1) {
-        printf("Redirect %d", redirect);
         for (int j = redirect + 1; j < MAX_INPUT_COUNT && args[j] != NULL; j++) {
-            printf("Creating file %s\n", args[j]);
             FILE *file = fopen(args[j], "a");
             if (file == NULL) {
                 warn("ERROR: Could not create file.");

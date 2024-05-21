@@ -41,6 +41,7 @@ struct Purse {
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <termios.h>
 
 extern int shell_running;
 
@@ -59,6 +60,8 @@ void clear_input_struct();
 void print_davis();
 void end_davis();
 
-void *arrowKeyListener(void *arg);
+void enable_raw_mode();
+void disable_raw_mode();
+void clear_line(int length);
 
 #endif

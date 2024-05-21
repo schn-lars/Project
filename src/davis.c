@@ -10,6 +10,14 @@ struct Purse *purse;
 int second_cmd_procedure;
 int shell_running = 1;
 
+pthread_mutex_t  input_mutex;
+pthread_t arrow_thread;
+struct Node *curr_cmd;
+int total_commands = 0;
+int history_command = -1;
+
+struct termios orig_termios;
+
 int main()
 {
     print_davis();
@@ -19,10 +27,13 @@ int main()
         return FAILURE;
     }
 
+    curr_cmd = malloc(sizeof(struct Node));
+
     if (initialize_history() == FAILURE) {
         warn("Could not initialize history.");
         return FAILURE;
     }
+
     davis();
     return 0;
 }
@@ -68,20 +79,84 @@ void print_davis()
  */
 void get_input() {
     printf("[DAVIS]\t");
+    fflush(stdout);
     input = calloc(MAX_INPUT_BUFFER + 1, sizeof(char));
-    if (fgets(input, MAX_INPUT_BUFFER, stdin) == NULL) {
-        perror("Error reading input.");
-        free(input);
-        return;
+    pthread_mutex_lock(&input_mutex);
+
+    enable_raw_mode();
+
+    int index = 0;
+    while (1) {
+        char c;
+        if (read(STDIN_FILENO, &c, 1) == -1) continue;
+
+        if (c == '\n' || c == '\r') {
+            input[index] = '\0';
+            break;
+        } else if (c == 127) { // Handle backspace
+            if (index > 0) {
+                index--;
+                printf("\b \b");
+                fflush(stdout);
+            }
+        } else if (c == '\033') { // Handle escape sequences
+            char seq[2];
+            if (read(STDIN_FILENO, &seq[0], 1) == -1) continue;
+            if (read(STDIN_FILENO, &seq[1], 1) == -1) continue;
+
+            if (seq[0] == '[') {
+                switch (seq[1]) {
+                    case 'A': // up
+                        clear_line(index);
+                        index = traverse_hist(1, curr_cmd, input, &history_command);
+                        if (index >= 0) {
+                            if (history_command != -1) {
+                                curr_cmd = curr_cmd->next;
+                            }
+                            history_command += 1;
+                            printf("%s", input);
+                            fflush(stdout);
+                        } else {
+                            history_command = index;
+                            index = 0;
+                        }
+                        break;
+                    case 'B': // down
+                        //printf("\r[DAVIS]\tDown arrow pressed\n[DAVIS]\t");
+                        clear_line(index);
+                        index = traverse_hist(-1, curr_cmd, input, &history_command);
+                        if (index >= 0) {
+                            if (history_command != -2) {
+                                curr_cmd = curr_cmd->prev;
+                            }
+                            printf("%s", input);
+                            fflush(stdout);
+                            history_command -= 1;
+                        } else {
+                            history_command = index;
+                            index = 0;
+                        }
+                        break;
+                }
+            }
+        } else if (c >= 32 && c <= 126) { // Printable characters
+            input[index++] = c;
+            putchar(c);
+            fflush(stdout);
+        }
     }
-    input[strcspn(input, "\n")] = '\0';
+
+    printf("\n");
+    disable_raw_mode();
+
+    pthread_mutex_unlock(&input_mutex);
     in = malloc(sizeof(struct Input));
     if (in == NULL) {
-        warn("Could not allocate memory for struct Input");
+        fprintf(stderr, "Could not allocate memory for struct Input\n");
         exit(1);
     }
     for (int i = 0; i < MAX_INPUT_COUNT; i++) {
-        in->cmd_one[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char)); // Speicher für Befehlszeichenketten
+        in->cmd_one[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
         in->cmd_one[i][0] = '\0';
         in->cmd_two[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
         in->cmd_two[i][0] = '\0';
@@ -320,7 +395,13 @@ void exec_command() {
         }
     }
     purse->points += (in->no_commands + executed) * MAX_INPUT_COUNT;
-    hist_add(in, executed);
+    curr_cmd = hist_add(in, executed);
+    if (total_commands >= INT_MAX) {
+        total_commands = -1;
+    } else {
+        total_commands += 1;
+    }
+    history_command = -1;
     clear_input_struct();
     printf("\n");
 }
@@ -517,7 +598,31 @@ void end_davis()
     LOGGER("end_davis()", "Start");
     free_tree();
     free(purse);
+    pthread_mutex_destroy(&input_mutex);
     LOGGER("end_davis", "End");
 }
 
 
+void disable_raw_mode()
+{
+    tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+}
+
+void enable_raw_mode()
+{
+    tcgetattr(STDIN_FILENO, &orig_termios);
+    atexit(disable_raw_mode);
+
+    struct termios raw = orig_termios;
+    raw.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+}
+
+void clear_line(int length)
+{
+    for (int i = 0; i < length; i++) {
+        printf("\b \b");
+    }
+    memset(input, '\0', MAX_INPUT_BUFFER + 1);
+    fflush(stdout);
+}

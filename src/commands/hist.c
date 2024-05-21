@@ -71,7 +71,7 @@ int initialize_history()
     return SUCCESS;
 }
 
-void hist_add(struct Input *input, int executed)
+struct Node* hist_add(struct Input *input, int executed)
 {
     pthread_mutex_lock(&history_mutex);
     if (history->size >= INT_MAX) {
@@ -82,7 +82,7 @@ void hist_add(struct Input *input, int executed)
     LOGGER("hist_add()", "created new Node");
     if (newNode == NULL) {
         LOGGER("History", "Error creating node!");
-        return;
+        return history->head;
     }
     if (history->size == 0) {
         history->head = newNode;
@@ -96,11 +96,77 @@ void hist_add(struct Input *input, int executed)
     }
     history->size+=1;
     pthread_mutex_unlock(&history_mutex);
+    return newNode;
 }
 
-void traverse_hist(int direction)
+int traverse_hist(int direction, struct Node *node, char *input, int *current)
 {
+    LOGGER("traverse()", "start");
+    if (node == NULL || history->size == 0) {
+        return -1;
+    }
+    if ((direction == 1 && node->next == NULL && *current != -1) || (*current == -2 && direction == 1)) {
+        // no tracked history, no next node if UP, no prev node if DOWN
+        LOGGER("traverse()", "no tracked history here");
+        return -2;
+    } else if ((direction == -1 && node->prev == NULL && *current != -2) || (*current == -1 && direction == -1)) {
+        return -1;
+    } else {
+        LOGGER("traverse()", "valid history");
+        struct Node *tmp;
+        if (direction == -1) { // going down
 
+            if (*current == -2) {
+                tmp = history->tail;
+                //printf("Traversing down tail: %d", tmp->number);
+            } else {
+                tmp = node->prev;
+                if (tmp == NULL) {
+                    return -1;
+                } else {
+                    *current = tmp->number;
+                    //printf("Traversing down: %d", tmp->number);
+                }
+            }
+        } else {
+            if (*current == -1) {
+                tmp = history->head;
+            } else {
+                tmp = node->next;
+                if (tmp == NULL) {
+                    return -2;
+                } else {
+                    *current = tmp->number;
+                }
+            }
+        }
+
+        int i;
+        int index = 0;
+        LOGGER("traverse()", "start iterating");
+        for (i = 0; i < MAX_INPUT_COUNT && tmp->cmd_one[i] != NULL; i++) {
+            LOGGER("traverse()", "enter loop 1");
+            strcat(input, tmp->cmd_one[i]);
+            index += strlen(tmp->cmd_one[i]);
+            LOGGER("traverse()", "first loop check if ended");
+            if (tmp->cmd_one[i+1] != NULL || tmp->no_commands == 2) {
+                strcat(input, " ");
+                index += 1;
+            }
+        }
+        if (tmp->no_commands == 2) {
+            int j = i;
+            strcat(input, "|");
+            index += 1;
+            for (int i = 0; j < MAX_INPUT_COUNT && tmp->cmd_two[i] != NULL; i++) {
+                j++;
+                strcat(input, " ");
+                strcat(input, tmp->cmd_two[i]);
+                index += strlen(tmp->cmd_two[i]) + 1;
+            }
+        }
+        return index;
+    }
 }
 
 /*

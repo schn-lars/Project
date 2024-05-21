@@ -39,8 +39,8 @@ struct History {
 };
 
 int hist(struct Input *); // main accesspoint for command
-void hist_add(struct Input *input, int executed); // linked list setup or add nodes
-void traverse_hist(int direction); // > 0 goes left, 0 < goes right
+struct Node* hist_add(struct Input *input, int executed); // linked list setup or add nodes
+int traverse_hist(int direction, struct Node *node, char *input, int *current); // > 0 goes left, 0 < goes right
 struct Node *create_node(struct Input *input, int executed);
 void print_history(int executed, int size);
 int initialize_history();
