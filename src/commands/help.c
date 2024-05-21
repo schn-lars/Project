@@ -8,9 +8,9 @@ int help() {
     DIR *dir;
     struct dirent *ent;
 
-    if ((dir = opendir(directory)) != NULL) {
+    if ((dir = opendir(directory)) != NULL) { // iterating over files in ./commands = our built-ins
         while ((ent = readdir(dir)) != NULL) {
-            if (strstr(ent->d_name, ".h") != NULL) {
+            if (strstr(ent->d_name, ".h") != NULL) { // if it is a header
                 char filepath[1024];
                 snprintf(filepath, sizeof(filepath), "%s/%s", directory, ent->d_name);
                 print_content_until_sequence(filepath, "*/");
@@ -24,8 +24,10 @@ int help() {
     return 1;
 }
 
-/*
+/**
  *  Prints title of each header file, which is basically the rules explaining usage of each command.
+ *  @param filename path of header file to be opened
+ *  @param sequence output will be read out until this sequence comes in
  */
 void print_content_until_sequence(const char *filename, const char *sequence) {
     FILE *file = fopen(filename, "r");

@@ -4,7 +4,12 @@ int file_name_size = 0;
 int file_type_size = 0;
 int readable = 0;
 
-int ls(char **args) // l = 1, a = 2, al = 3
+/**
+ * Called when running ls command.
+ * @param args cmd_one of input struct
+ * @return execution state
+ */
+int ls(char **args)
 {
     LOGGER("LS", "");
     struct dirent *directory_entry;
@@ -58,12 +63,12 @@ int ls(char **args) // l = 1, a = 2, al = 3
     if (strchr(flag, 'r') != NULL) {
         readable = 1;
     }
-    set_longest_name(directory_content, directory_entry);
+    set_longest_name(directory_content, directory_entry); // used to display the contents in a list properly
     if (strchr(flag, 'l') != NULL) {
         display_list_header();
     }
 
-    while ((directory_entry = readdir(directory_content)) != NULL) {
+    while ((directory_entry = readdir(directory_content)) != NULL) { // iterate over every entry inside directory
         struct stat *file_stat = malloc(sizeof(struct stat));
         char full_path[1024];
         snprintf(full_path, sizeof(full_path), "%s/%s", path, directory_entry->d_name);
@@ -72,7 +77,7 @@ int ls(char **args) // l = 1, a = 2, al = 3
             LOGGER("Stat-ls()", full_path);
             return FAILURE;
         }
-        if (directory_entry->d_name[0] == '.') {
+        if (directory_entry->d_name[0] == '.') { // if it's a hidden file or directory
             if (strchr(flag, 'l') != NULL && strchr(flag, 'a') != NULL) {
                 LOGGER("ls() is al", directory_entry->d_name);
                 display_as_list(file_stat, directory_entry);
@@ -120,7 +125,8 @@ void display_list_header()
 
 /**
  * Execution with -l flag.
- * @param stat_file
+ * @param stat_file containing info about current entry
+ * @param entry actual entry we will print out
  */
 void display_as_list(struct stat *stat_file, struct dirent *entry)
 {
@@ -151,6 +157,11 @@ void display_as_list(struct stat *stat_file, struct dirent *entry)
     }
 }
 
+/**
+ * Sets file_name_size and file_type_size needed for displaying ls properly when used with list flag.
+ * @param directory_content
+ * @param directory_entry
+ */
 void set_longest_name(DIR *directory_content, struct dirent *directory_entry)
 {
     while (directory_entry != NULL) {
@@ -170,6 +181,11 @@ void set_longest_name(DIR *directory_content, struct dirent *directory_entry)
 
 }
 
+/**
+ * Used with readable flag. Converts type into string.
+ * @param type directory_entry type
+ * @return human readable type
+ */
 char *get_type(unsigned char type)
 {
     if (type == DT_DIR) {
@@ -185,7 +201,7 @@ char *get_type(unsigned char type)
 
 /**
  * Calculates the proper size of a size for a given input of bytes.
- * @param size
+ * @param size number of bytes
  * @return shortened format of bytes
  */
 char* format_file_size(size_t size)
@@ -201,6 +217,11 @@ char* format_file_size(size_t size)
     return result;
 }
 
+/**
+ * Called when using readable flag. Converts digit permissions to string notation.
+ * @param mode mode of entry in digits
+ * @return string representing actions made by each group
+ */
 char *permissions_to_string(mode_t mode)
 {
     static char buf[11];
@@ -225,6 +246,11 @@ char *permissions_to_string(mode_t mode)
     return buf;
 }
 
+/**
+ * Called when not using list flag.
+ * @param directory_entry current entry
+ * @param file_stat information about entry
+ */
 void print_regular(struct dirent *directory_entry, struct stat *file_stat)
 {
     if (S_ISLNK(file_stat->st_mode) ) {

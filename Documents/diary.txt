@@ -149,3 +149,7 @@ Also started with adding an echo.c command to the commands directory.
 Saturday 18.05.2024: Lars
 I implemented the system command 'echo' and added some flags to it to modify the looks of the output. Now you can add
 background color, font color and some styles.
+
+Tuesday, 21.05.2024: Lars
+I managed to add the possibility to use the arrow keys to traverse history commands. Moreover added documentation of methods I implemented.
+I am finalizing my work, as I mostly finished my report as well.

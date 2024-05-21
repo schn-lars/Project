@@ -46,6 +46,7 @@ struct Purse {
 
 extern int shell_running;
 
+
 void davis();
 void get_input();
 void parse_input_into_commands();
