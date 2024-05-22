@@ -22,7 +22,6 @@ int latex(char **args) {
         strcat(pathToCheck, suffix); // add suffix to check if it exists with .tex
     }
     if (checkFile(pathToCheck)) { // if there is already a file with this name, add (i)
-        printf("This path or file does already exist. I will find you another name for it.\n");
         int i= 0;
         char* numb = calloc(100, sizeof(char));
         while(checkFile(pathToCheck) != 0) {
@@ -39,7 +38,7 @@ int latex(char **args) {
         free(numb);
     }
     // now pathToCheck contains the next free filename that can be given
-    printf("right name: %s", pathToCheck);
+    printf("Unfortunatly this filename already exists but I found you a new one: %s\n", pathToCheck);
     FILE *file = fopen(pathToCheck, "w+"); // creates new file
     if (file == NULL) {
         warn("ERROR: Could not create file.\n");
@@ -152,6 +151,7 @@ int checkLatexArgs(char* arg) {
         return 0;
     }
     char* extractedInput = &arg[i];
+    removeUnderlines(extractedInput);
     if (strstr(extractedArg, "subtitle") != NULL || strstr(extractedArg, "sub") != NULL) {
         strcat(variables, "\\newcommand{\\subtitlename}{");
         strcat(variables, extractedInput);
@@ -185,4 +185,19 @@ int checkLatexArgs(char* arg) {
     }
     free(extractedArg);
     return 1;
+}
+
+
+char* removeUnderlines(char* input) {
+    if (input == NULL) {
+        return 0;
+    }
+
+    while (*input != '\0') {
+        if (*input == '_') {
+            *input = ' ';
+        }
+        input++;
+    }
+    return input;
 }

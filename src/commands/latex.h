@@ -22,6 +22,7 @@ int latex(char **args);
 int checkFile(const char *path);
 char* removeQuotes(char* str);
 char* removeSuffix(char* filename, char* suffix);
+char* removeUnderlines(char* input);
 int copyFileContents(const char *sourcePath, FILE *destFile);
 int checkLatexArgs(char* arg);
 int setupLatexArg(char** args, int start);
