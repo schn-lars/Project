@@ -3,15 +3,16 @@
 #define BUFFER_SIZE 1024
 
 char* variables;
+char* exNumb;
 
 int latex(char **args) {
-    copyFile("../../../Desktop/test.png", "../../../Desktop/Uni/testPic");
     if (args[1] == NULL || args[2] == NULL) { // args[1] path/filename // args[2] = tempalte type
         warn("Missing data. Usage latex <Path/filename> <template type>");
         return FAILURE;
     }
     // TODO: check if .somethingelse bc thats wrong file
     variables = calloc(sizeof(char), 1024);
+    exNumb = calloc(sizeof(char), 128);
     int ind = 3; // from here there could be arguments
     setupLatexArg(args, ind);
     char* pathToCheck = calloc( 1024, sizeof(char));
@@ -21,32 +22,50 @@ int latex(char **args) {
         char *newToCheck = removeQuotes(pathToCheck);
         strcpy(pathToCheck, newToCheck);
     }
-    if (strstr(pathToCheck, suffix) == NULL ) {
-        strcat(pathToCheck, suffix); // add suffix to check if it exists with .tex
-    }
+
     if (checkFile(pathToCheck)) { // if there is already a file with this name, add (i)
         int i= 0;
         char* numb = calloc(100, sizeof(char));
         while(checkFile(pathToCheck) != 0) {
-            char* newPathToCheck = removeSuffix(pathToCheck, suffix); // remove suffix if there is one
-            strcpy(pathToCheck, newPathToCheck);
             char *token = strtok(pathToCheck, "(");
             if (token != NULL) {
                 strcpy(pathToCheck, token);
             }
             sprintf(numb,"(%d)", ++i);
             strcat(pathToCheck, numb);
-            strcat(pathToCheck, suffix); // add suffix to check if it exists with .tex
         }
         free(numb);
     }
     // now pathToCheck contains the next free filename that can be given
-    printf("Unfortunatly this filename already exists but I found you a new one: %s\n", pathToCheck);
-    FILE *file = fopen(pathToCheck, "w+"); // creates new file
+    printf("I created a directory for you: %s\n", pathToCheck);
+    if (mkdir(pathToCheck, 0755) != 0) {
+        printf("I couldn't create this directory for you.\n");
+        free(variables);
+        free(exNumb);
+        return FAILURE;
+    }
+    char* filename = calloc(sizeof(char), 128);
+    if (strstr(args[2], "exercise") != NULL) {
+        strcat(filename, "exercise");
+        if (exNumb != NULL) { // if there was given an exercise number X, call the file exerciseX
+            strcat(filename, exNumb);
+        }
+    } else if (strstr(args[2], "project") != NULL || strstr(args[2], "report") != NULL){
+        strcat(filename, "project_report");
+    }
+    strcat(filename, suffix);
+    char* filePath = calloc(sizeof(char), 1024);
+    strcat(filePath, pathToCheck); // create path to actual latex file
+    strcat(filePath, "/");
+    strcat(filePath, filename);
+    FILE *file = fopen(filePath, "w+"); // creates new file
     if (file == NULL) {
         warn("ERROR: Could not create file.\n");
         free(pathToCheck);
         free(variables);
+        free(filename);
+        free(filePath);
+        free(exNumb);
         return FAILURE;
     }
     //checking variables for missing inputs and filling in with default values
@@ -77,6 +96,9 @@ int latex(char **args) {
             fclose(file);
             free(pathToCheck);
             free(variables);
+            free(filename);
+            free(filePath);
+            free(exNumb);
             return FAILURE;
         }
     } else if (strstr(args[2], "report") != NULL || strstr(args[2], "project") != NULL) {
@@ -84,11 +106,17 @@ int latex(char **args) {
             fclose(file);
             free(pathToCheck);
             free(variables);
+            free(filename);
+            free(filePath);
+            free(exNumb);
             return FAILURE;
         }
     }
     free(pathToCheck);
     free(variables);
+    free(filename);
+    free(filePath);
+    free(exNumb);
     return SUCCESS;
 }
 
@@ -254,6 +282,7 @@ int checkLatexArgs(char* arg) {
         strcat(variables, "}\n");
     } else if (strstr(extractedArg, "number") != NULL || strstr(extractedArg, "numb") != NULL) {
         strcat(variables, "\\newcommand{\\homeworkNumber}{");
+        strcpy(exNumb, extractedInput);
         strcat(variables, extractedInput);
         strcat(variables, "}\n");
     } else if (strstr(extractedArg, "university") != NULL || strstr(extractedArg, "uni") != NULL) {

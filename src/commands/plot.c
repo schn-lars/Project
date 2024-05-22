@@ -90,6 +90,7 @@ int plot(char **args) {
         char* savecommand = calloc( 512, sizeof(char));
         char* nameToCheck = calloc( 512, sizeof(char));
         strcpy(savecommand, "set term pngcairo\nset output '");
+        //TODO: add argument for path to save and check here
         strcpy(nameToCheck, "./");
         if (titleSet != 1 || title == NULL) { // there is no title, so we name it per Default DAVIS_plot
             strcpy(title, "DAVIS_plot");
