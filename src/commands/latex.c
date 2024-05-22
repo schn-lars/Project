@@ -1,8 +1,11 @@
 #include "latex.h"
 
+#define BUFFER_SIZE 1024
+
 char* variables;
 
 int latex(char **args) {
+    copyFile("../../../Desktop/test.png", "../../../Desktop/Uni/testPic");
     if (args[1] == NULL || args[2] == NULL) { // args[1] path/filename // args[2] = tempalte type
         warn("Missing data. Usage latex <Path/filename> <template type>");
         return FAILURE;
@@ -118,6 +121,80 @@ int copyFileContents(const char *sourcePath, FILE *destFile) {
     fclose(destFile);
     return SUCCESS;
 }
+
+int copyFile(const char *sourcePath, const char *destPath) {
+    if (isImageFile(sourcePath) == 0) { // Check if not a picture
+        printf("The given File is not a picture.\n");
+        return 0;
+    }
+    FILE *sourceFile = fopen(sourcePath, "rb");
+    if (sourceFile == NULL) {
+        perror("ERROR - could not open sourcefile\n");
+        return 1;
+    }
+
+    FILE *destFile = fopen(destPath, "wb");
+    if (destFile == NULL) {
+        perror("ERROR - could not open destfile\n");
+        fclose(sourceFile);
+        return 1;
+    }
+
+    char buffer[BUFFER_SIZE];
+    size_t bytesRead;
+    printf("Before while.\n");
+    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, sourceFile)) > 0) { // writes Bytes for Bytes to buffer
+        if (fwrite(buffer, 1, bytesRead, destFile) != bytesRead) {
+            perror("ERROR - could not write to destfile\n");
+            fclose(sourceFile);
+            fclose(destFile);
+            return 1;
+        }
+    }
+    printf("After while.\n");
+
+    if (ferror(sourceFile)) {
+        perror("ERROR- could not read from sourcefile\n");
+    }
+
+    fclose(sourceFile);
+    fclose(destFile);
+
+    printf("Datei erfolgreich kopiert von %s nach %s\n", sourcePath, destPath);
+    return 0;
+}
+
+int isImageFile(const char *filename) {
+    unsigned char pngSignature[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}; // identidier of PNG
+    unsigned char jpgSignature[3] = {0xFF, 0xD8, 0xFF}; // most commmon identifier of JPG
+
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("ERROR - could not open file");
+        return 0;
+    }
+
+    unsigned char buffer[8];
+    size_t bytesRead = fread(buffer, 1, 8, file);
+    fclose(file);
+
+    if (bytesRead < 8) {
+        return 0; // file can't be a picture because it is too small
+    }
+
+    // Check if PNG-signature
+    if (memcmp(buffer, pngSignature, 8) == 0) {
+        return 1; // PNG-file
+    }
+
+    // Check if JPG-signature
+    if (memcmp(buffer, jpgSignature, 3) == 0) {
+        return 1; // JPG-file
+    }
+
+    return 0; // else not a picture
+}
+
 
 int setupLatexArg(char** args, int start) {
     int i;

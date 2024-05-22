@@ -24,6 +24,8 @@ char* removeQuotes(char* str);
 char* removeSuffix(char* filename, char* suffix);
 char* removeUnderlines(char* input);
 int copyFileContents(const char *sourcePath, FILE *destFile);
+int copyFile(const char *sourcePath, const char *destPath);
+int isImageFile(const char *filename);
 int checkLatexArgs(char* arg);
 int setupLatexArg(char** args, int start);
 
