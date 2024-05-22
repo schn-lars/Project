@@ -14,7 +14,6 @@ int shell_running = 1;
 pthread_mutex_t  input_mutex;
 pthread_t arrow_thread;
 struct Node *curr_cmd;
-int total_commands = 0;
 int history_command = -1;
 
 struct termios orig_termios;
@@ -29,6 +28,7 @@ int main()
     }
 
     curr_cmd = malloc(sizeof(struct Node));
+    pthread_mutex_init(&input_mutex, NULL);
 
     if (initialize_history() == FAILURE) {
         warn("Could not initialize history.");
@@ -39,6 +39,9 @@ int main()
     return 0;
 }
 
+/**
+ *  This method contains the loop which is running as long the program is active.
+ */
 void davis()
 {
     printf("Hey, I'm DAVIS. How may I assist You?\n");
@@ -49,8 +52,8 @@ void davis()
     }
     shell_running = 1;
     while (shell_running) {
-        get_input(); // ls q w -l e -o -p
-        parse_input_into_commands(); // korrekt geparst
+        get_input();
+        parse_input_into_commands();
         print_arguments();
         sort_flags_in_arguments(in->cmd_one);
         print_arguments();
@@ -63,6 +66,9 @@ void davis()
     end_davis();
 }
 
+/**
+ * Prints out the logo of our shell into the terminal.
+ */
 void print_davis()
 {
     printf("░▒▓███████▓▒░   ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░  ░▒▓███████▓▒░ \n");
@@ -77,6 +83,9 @@ void print_davis()
 
 /*
  * This method takes user input.
+ *  - The input is taken in raw-mode, which means the program knows every character instantly.
+ *  - Special characters (UP-/DOWN keys) are handled here.
+ *  - Initializes struct (Input) needed to further parse input correctly.
  */
 void get_input() {
     printf("[DAVIS]\t");
@@ -167,14 +176,15 @@ void get_input() {
 }
 
 /*
- * Translating the given input in syntactically correct parameters.
+ * Putting the input into the struct Input. If a "|" is present, the second argument array is filled too.
+ *
  */
 void parse_input_into_commands() {
     int arg_counter = 0;
-    char *input_copy = strdup(input); // Kopie der Eingabe machen
+    char *input_copy = strdup(input); // copy of input
     char *pipe_token = strchr(input_copy, '|');
     char *saveptr;
-    if (pipe_token != NULL) {
+    if (pipe_token != NULL) { // parsing a piped command
         LOGGER("Parsing()", "Command with pipe.");
         char *first_half = strtok(input_copy, "|");
         char *second_half = strtok(NULL, "|");
@@ -234,8 +244,10 @@ void parse_input_into_commands() {
 }
 
 /*
- * Executes the command, previously saved in command originating from input.
- * Commands can be added by elif-statements.
+ * Executes the command saved in struct Input. Piped commands get two forked processes, system commands get one
+ * and built-ins are called by function. Custom commands can be added by adding elif-statements.
+ * After command is executed, this method calls history to create new history entry based on successtate of command.
+ * Input is freed after function call.
  */
 void exec_command() {
     LOGGER("starting in exec_command()",in->cmd_one[0]);
@@ -303,7 +315,7 @@ void exec_command() {
                 close(fd[0]); // Close both ends of pipe in parent
                 close(fd[1]);
                 int status;
-                waitpid(p1, &status, 0); // Warte auf p1
+                waitpid(p1, &status, 0); // wait for p1
                 if (WIFEXITED(status)) {
                     if (WEXITSTATUS(status) != 0) {
                         executed = 0;
@@ -311,7 +323,7 @@ void exec_command() {
                 } else {
                     executed = 0;
                 }
-                waitpid(p2, &status, 0); // Warte auf p2
+                waitpid(p2, &status, 0); // wait for p2
                 if (WIFEXITED(status)) {
                     if (WEXITSTATUS(status) != 0) {
                         executed = 0;
@@ -322,7 +334,7 @@ void exec_command() {
             }
         }
     } else {
-        // Regular command
+        // Built-in commands. Add commands by adding new elif-statements.
         LOGGER("Executing regular command: ", in->cmd_one[0]);
         if (strcmp(in->cmd_one[0], "quit") == 0) {
             quit();
@@ -371,6 +383,7 @@ void exec_command() {
             printf("Your points: %d\n", purse->points);
         } else {
             LOGGER("exe_command()","System command executing ...");
+            // System command
             pid_t sys_cmd = fork();
             int status;
             if (sys_cmd == -1) {
@@ -386,7 +399,7 @@ void exec_command() {
                 }
             } else {
                 // wait(NULL);
-                waitpid(sys_cmd, &status, 0); // Warten auf den Kindprozess und Exit-Status abfangen
+                waitpid(sys_cmd, &status, 0); // wait for child and capture exit status
                 if (WIFEXITED(status)) {
                     if (WEXITSTATUS(status) != 0) {
                         executed = 0;
@@ -400,18 +413,14 @@ void exec_command() {
     }
     purse->points += (in->no_commands + executed) * MAX_INPUT_COUNT;
     curr_cmd = hist_add(in, executed);
-    if (total_commands >= INT_MAX) {
-        total_commands = -1;
-    } else {
-        total_commands += 1;
-    }
     history_command = -1;
     clear_input_struct();
     printf("\n");
 }
 
 /*
- * This implements the insertion sort algorithm and pushes flags to the left and rest to the right.
+ * This method orders Input, where flags are on the left and rest is being filled up with.
+ * F.e.: [echo Hallo -l -R] -> [echo -l -R Hallo]
  */
 void sort_flags_in_arguments(char **parsed_input)
 {
@@ -426,7 +435,7 @@ void sort_flags_in_arguments(char **parsed_input)
     }
     int flagCounter = 0;
     LOGGER("Sorting flags ...", "");
-    for (int j = 1; j < MAX_INPUT_COUNT; j++) { // first pick flags
+    for (int j = 1; j < MAX_INPUT_COUNT; j++) { // first pick flags and put them into copy
         if (parsed_input[j] != NULL) {
             if (parsed_input[j][0] == '-') {
                 strncpy(tmp_flags[flagCounter], parsed_input[j], MAX_ARG_LENGTH);
@@ -448,7 +457,7 @@ void sort_flags_in_arguments(char **parsed_input)
         }
     }
     LOGGER("Sorting", "fill back up");
-    for (int j = 1; j <= flagCounter; j++) { // fill them back in
+    for (int j = 1; j <= flagCounter; j++) { // fill them back in reading from copy
         if (tmp_flags[j] != NULL) {
             strcpy(parsed_input[j], tmp_flags[j - 1]);
         }
@@ -458,7 +467,7 @@ void sort_flags_in_arguments(char **parsed_input)
     for (int t = 0; t < MAX_INPUT_COUNT; t++) {
         free(tmp_flags[t]);
     }
-    if (in->no_commands == 2 && second_cmd_procedure == 0) {
+    if (in->no_commands == 2 && second_cmd_procedure == 0) { // called if piped command
         second_cmd_procedure = 1;
         sort_flags_in_arguments(in->cmd_two);
         second_cmd_procedure = 0;
@@ -466,7 +475,7 @@ void sort_flags_in_arguments(char **parsed_input)
 }
 
 /*
- *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la) and moving rest closer
+ *  Puts every flag in input into one single bigger flag (f.e. -l -a -> -la). Index of flags is 1.
  */
 void chain_up_flags(char **parsed_sorted_input) {
     LOGGER("Chain:", "Start");
@@ -477,7 +486,7 @@ void chain_up_flags(char **parsed_sorted_input) {
         if (parsed_sorted_input[j] != NULL && parsed_sorted_input[j][0] == '-') {
             foundFlag++;
             if (foundFlag != 1) {
-                strcat(combined_flags, parsed_sorted_input[j] + 1);
+                strcat(combined_flags, parsed_sorted_input[j] + 1); // + 1 to remote first character '-'
                 parsed_sorted_input[j][0] = '\0'; // reset current argument
             } else {
                 strcat(combined_flags, parsed_sorted_input[j]);
@@ -492,7 +501,7 @@ void chain_up_flags(char **parsed_sorted_input) {
         combined_flags[0] = '\0'; // reset
     }
     LOGGER("Chaining", "Done");
-    if (in->no_commands == 2 && second_cmd_procedure == 0) {
+    if (in->no_commands == 2 && second_cmd_procedure == 0) { // called if piped command
         second_cmd_procedure = 1;
         chain_up_flags(in->cmd_two);
         second_cmd_procedure = 0;
@@ -500,7 +509,7 @@ void chain_up_flags(char **parsed_sorted_input) {
 }
 
 /**
- * Finalizes the commands.
+ * This method removes potential gaps resulting from chain_up_flags().
  * Input: [CMD, -FLAGS, NULL, ... , ARGS, ..., NULL]
  * Output: [CMD, -FLAGS, ARGS, NULL, ...]
  */
@@ -530,7 +539,6 @@ void put_flags_first(char **chained_up_flags) {
             }
         }
     }
-
     // Recursively call put_flags_first for nested commands
     if (in->no_commands == 2 && second_cmd_procedure == 0) {
         second_cmd_procedure = 1;
@@ -540,7 +548,7 @@ void put_flags_first(char **chained_up_flags) {
 }
 
 /*
- * For testing purposes
+ * For testing purposes.
  */
 void LOGGER(char *desc, char *log_statement) {
     if (LOGGING) {
@@ -565,6 +573,9 @@ void warn(char *warning)
     printf("ERROR - %s\n", warning);
 }
 
+/**
+ * Debugging purposes. Prints out the contents of struct Input.
+ */
 void print_arguments()
 {
     if (LOGGING == 0) {
@@ -588,6 +599,9 @@ void print_arguments()
     }
 }
 
+/**
+ * This method frees the struct Input. Called after every command execution.
+ */
 void clear_input_struct()
 {
     for (int i = 0; i < MAX_INPUT_COUNT; i++) {
@@ -597,6 +611,9 @@ void clear_input_struct()
     free(in);
 }
 
+/**
+ * Method called after user quit the program.
+ */
 void end_davis()
 {
     LOGGER("end_davis()", "Start");
@@ -606,12 +623,17 @@ void end_davis()
     LOGGER("end_davis", "End");
 }
 
-
+/**
+ * This method disables the raw mode.
+ */
 void disable_raw_mode()
 {
     tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 }
 
+/**
+ * This method enters raw mode.
+ */
 void enable_raw_mode()
 {
     tcgetattr(STDIN_FILENO, &orig_termios);
@@ -622,6 +644,10 @@ void enable_raw_mode()
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 }
 
+/**
+ * Method called by using arrows to iterate through history to clear user's input in command line.
+ * @param length
+ */
 void clear_line(int length)
 {
     for (int i = 0; i < length; i++) {

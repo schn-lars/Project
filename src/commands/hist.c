@@ -3,18 +3,23 @@
 struct History *history;
 pthread_mutex_t history_mutex;
 
+/**
+ * Entry point when calling hist from command line
+ * @param input entire input struct of parsed command
+ * @return state of execution
+ */
 int hist(struct Input *input)
 {
     LOGGER("History", "Adding entry.");
     if (history->size == 0) {
         printf("There are no tracked commands.\n");
     } else {
-        if (input->cmd_one[1] == NULL) {
+        if (input->cmd_one[1] == NULL) { // hist
             print_history(-1, DEFAULT_COUNT);
             return SUCCESS;
         }
-        int requested_entries = atoi(input->cmd_one[1]); //
-        if (input->cmd_one[1][0] != '-') {
+        int requested_entries = atoi(input->cmd_one[1]);
+        if (input->cmd_one[1][0] != '-') { // determining whether number of entries is given
             if (requested_entries != 0) {
                 print_history(-1, requested_entries);
             } else {
@@ -31,6 +36,7 @@ int hist(struct Input *input)
             } else {
                 requested_entries = DEFAULT_COUNT;
             }
+            // looking for flags
             if ((strcmp(input->cmd_one[1], "-t")) == 0) {
                 print_history(1, requested_entries);
             } else if ((strcmp(input->cmd_one[1], "-f")) == 0) {
@@ -55,6 +61,10 @@ int hist(struct Input *input)
     return SUCCESS;
 }
 
+/**
+ * Called when starting program. Creates instance of history.
+ * @return exit state
+ */
 int initialize_history()
 {
     if (pthread_mutex_init(&history_mutex, NULL) != 0) {
@@ -71,6 +81,12 @@ int initialize_history()
     return SUCCESS;
 }
 
+/**
+ * Called after command was executed. Creates a new history entry, which is being appended to head.
+ * @param input parsed input of executed command
+ * @param executed execution state of command
+ * @return newly created *Node, which is used by davis.c for iterating over history using keystrokes
+ */
 struct Node* hist_add(struct Input *input, int executed)
 {
     pthread_mutex_lock(&history_mutex);
@@ -99,6 +115,15 @@ struct Node* hist_add(struct Input *input, int executed)
     return newNode;
 }
 
+/**
+ * Method called by davis.c when pressing arrow keys.
+ * @param direction 1 (UP), -1 (DOWN)
+ * @param node current node
+ * @param input empty input, which is being filled by the method
+ * @param current position in history (number of entry),
+ *          -1 (NULL before head [head->prev]), -2 (NULL after tail [tail->next])
+ * @return index (length of newly filled input), needed by davis.c to clear terminal before calling this function again
+ */
 int traverse_hist(int direction, struct Node *node, char *input, int *current)
 {
     LOGGER("traverse()", "start");
@@ -110,22 +135,20 @@ int traverse_hist(int direction, struct Node *node, char *input, int *current)
         LOGGER("traverse()", "no tracked history here");
         return -2;
     } else if ((direction == -1 && node->prev == NULL && *current != -2) || (*current == -1 && direction == -1)) {
+        // if previous node is null and i am not in position -2 or i am before head and i want to go down
         return -1;
     } else {
         LOGGER("traverse()", "valid history");
         struct Node *tmp;
         if (direction == -1) { // going down
-
             if (*current == -2) {
                 tmp = history->tail;
-                //printf("Traversing down tail: %d", tmp->number);
             } else {
                 tmp = node->prev;
                 if (tmp == NULL) {
                     return -1;
                 } else {
                     *current = tmp->number;
-                    //printf("Traversing down: %d", tmp->number);
                 }
             }
         } else {
@@ -144,6 +167,7 @@ int traverse_hist(int direction, struct Node *node, char *input, int *current)
         int i;
         int index = 0;
         LOGGER("traverse()", "start iterating");
+        // building input by filing it with arguments of input of the tmp node
         for (i = 0; i < MAX_INPUT_COUNT && tmp->cmd_one[i] != NULL; i++) {
             LOGGER("traverse()", "enter loop 1");
             strcat(input, tmp->cmd_one[i]);
@@ -170,7 +194,7 @@ int traverse_hist(int direction, struct Node *node, char *input, int *current)
 }
 
 /*
- * This iterates over history and prints it. Size is per default on 5, if all its just the size.
+ * This iterates over history and prints it. Size is per default on 5.
  */
 void print_history(int executed, int size)
 {
@@ -211,6 +235,9 @@ void print_history(int executed, int size)
     pthread_mutex_unlock(&history_mutex);
 }
 
+/**
+ * This method creates a new node. Called by hist_add().
+ */
 struct Node *create_node(struct Input *input, int executed)
 {
     LOGGER("Creating node()", "Start");
@@ -218,8 +245,8 @@ struct Node *create_node(struct Input *input, int executed)
     if (node == NULL) {
         return NULL;
     }
-    for (int i = 0; i < MAX_INPUT_COUNT; i++) {
-        node->cmd_one[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char)); // Speicher für Befehlszeichenketten
+    for (int i = 0; i < MAX_INPUT_COUNT; i++) { // allocating memory for command
+        node->cmd_one[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
         node->cmd_one[i][0] = '\0';
         node->cmd_two[i] = malloc((MAX_ARG_LENGTH + 1) * sizeof(char));
         node->cmd_two[i][0] = '\0';
@@ -253,16 +280,27 @@ struct Node *create_node(struct Input *input, int executed)
     return node;
 }
 
+/**
+ * Prints successful command
+ * @param number id of command
+ */
 void print_red(int number)
 {
     printf(RED   "[%d]"   RESET, number);
 }
 
+/**
+ * Prints successful command
+ * @param number id of command
+ */
 void print_green(int number)
 {
     printf(GREEN   "[%d]"   RESET, number);
 }
 
+/**
+ * Called when terminating davis. Frees the entire history-tree
+ */
 void free_tree()
 {
     LOGGER("free_tree", "start");
@@ -296,8 +334,8 @@ void free_tree()
 
 /**
  * Copies the desired command into the current input.
- * @param input
- * @param id
+ * @param input struct where data will be copied into
+ * @param id number of the command which we want to re-execute
  */
 void execute(struct Input *input, int id)
 {

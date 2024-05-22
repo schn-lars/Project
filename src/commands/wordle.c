@@ -7,6 +7,11 @@ int guesses = 0;
 int state = 0;
 struct Purse *player_purse;
 
+/**
+ * Called when user calls wordle.
+ * @param purse The current stash of points he has earned.
+ * @return whether he solved it or not
+ */
 int wordle(struct Purse *purse)
 {
     LOGGER("wordle()" , "start of wordle");
@@ -39,6 +44,9 @@ int wordle(struct Purse *purse)
     return FAILURE;
 }
 
+/**
+ * Randomly selects a word from the wordle_list.
+ */
 void init_word() {
     FILE *file = fopen(WORD_FILE, "r");
     if (file == NULL) {
@@ -97,6 +105,9 @@ void init_word() {
     LOGGER("init_wordle()", "Initialisation done.");
 }
 
+/**
+ * This method prints out the gameboard of all current guesses.
+ */
 void print_game()
 {
     clear();
@@ -120,6 +131,9 @@ void print_game()
     }
 }
 
+/**
+ * This method asks the user for a word or command to purchase a hint or get help.
+ */
 void get_word()
 {
     printf("[WORDLE] ");
@@ -180,6 +194,11 @@ void get_word()
     }
 }
 
+/**
+ * Validates a user's input. A word should not contain special characters or anything besides letters.
+ * @param input word entered by user
+ * @return 0 if there are just letters
+ */
 int contains_non_letters(char *input) {
     int index = 0;
     while (index < WORDLE_BUFFER && input[index] != '\0') {
@@ -191,6 +210,9 @@ int contains_non_letters(char *input) {
     return 0;
 }
 
+/**
+ * This method puts the validated word of the user inside of the game structure.
+ */
 void put_input_into_game()
 {
     LOGGER("put_input_into_game()", "start");
@@ -217,6 +239,10 @@ void put_input_into_game()
     LOGGER("put_input_into_game()", "end");
 }
 
+/**
+ * This method ends the game if no more guesses are allowed or user guesses word.
+ * Otherwise it merely prints out the game.
+ */
 void set_state()
 {
     LOGGER("set_state()", "start");
@@ -238,12 +264,18 @@ void set_state()
     LOGGER("set_state()", "end");
 }
 
+/**
+ * Called when user inputs -help
+ */
 void print_help()
 {
     printf("Enter '-true' for correct letter and position (200 Points).\n");
     printf("Enter '-semi' for correct letter clue (130 Points).\n");
 }
 
+/**
+ * Called when user inputs -true
+ */
 void hint_true()
 {
     LOGGER("hint_true()", "Start");
@@ -258,6 +290,9 @@ void hint_true()
     print_game();
 }
 
+/**
+ * Called when user inputs -semi
+ */
 void hint_semi()
 {
     int correctChars = 0;

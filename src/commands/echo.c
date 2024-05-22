@@ -10,14 +10,14 @@ int echo(char **args) {
         return FAILURE;
     }
     int redirect = check_for_redirect(args);
-    if (redirect != -1) {
-        for (int j = redirect + 1; j < MAX_INPUT_COUNT && args[j] != NULL; j++) {
+    if (redirect != -1) { // user wants to redirect input
+        for (int j = redirect + 1; j < MAX_INPUT_COUNT && args[j] != NULL; j++) { // iterating over files
             FILE *file = fopen(args[j], "a");
             if (file == NULL) {
                 warn("ERROR: Could not create file.");
                 return FAILURE;
             } else {
-                for (int k = 1; k < redirect; k++) {
+                for (int k = 1; k < redirect; k++) { // printing given input into file
                     if (args[k][0] != '-') {
                         fprintf(file, "%s", args[k]);
                         if (k < redirect - 1) {
@@ -34,16 +34,16 @@ int echo(char **args) {
         set_background(args[1]);
         set_style(args[1]);
         set_color(args[1]);
-        if (color != NULL) printf("%s", color);
-        if (style != NULL) printf("%s", style);
-        if (background != NULL) printf("%s", background);
+        if (color != NULL) printf("%s", color); // printing escape sequence for color ...
+        if (style != NULL) printf("%s", style); // .. and style ...
+        if (background != NULL) printf("%s", background); // .. and background
         for (int i = 1; i < MAX_INPUT_COUNT && args[i] != NULL && args[i][0] != '\0'; i++) {
             if (args[i][0] != '-') {
                 printf("%s", args[i]);
                 if (args[i + 1] != NULL) printf(" ");
             }
         }
-        if (color != NULL || style != NULL || background != NULL) printf("%s", RESET);
+        if (color != NULL || style != NULL || background != NULL) printf("%s", RESET); // reset if any flags given
         printf("\n");
         free(background);
         free(color);
@@ -52,6 +52,10 @@ int echo(char **args) {
     }
 }
 
+/**
+ * This method sets the style variable, if a suitable flag is given.
+ * @param args input[1] containing potential flags
+ */
 void set_style(char *args)
 {
     style = calloc(40, sizeof(char));
@@ -68,6 +72,10 @@ void set_style(char *args)
     }
 }
 
+/**
+ * This method sets the color variable, if a suitable flag is given.
+ * @param args input[1] containing potential flags
+ */
 void set_color(char *args)
 {
     color = calloc(15, sizeof(char));
@@ -100,6 +108,10 @@ void set_color(char *args)
     }
 }
 
+/**
+ * This method sets the background variable, if a suitable flag is given.
+ * @param args input[1] containing potential flags
+ */
 void set_background(char *args)
 {
     background = calloc(15, sizeof(char));
@@ -132,6 +144,11 @@ void set_background(char *args)
     }
 }
 
+/**
+ * Returns the index where ">>" is located in input array.
+ * If nothing is found it returns -1
+ * @param args entire input
+ */
 int check_for_redirect(char **args)
 {
     for (int i = 1; i < MAX_INPUT_COUNT && args[i] != NULL; i++) {
