@@ -65,6 +65,9 @@ int latex(char **args) {
     if (strstr(variables, "\\uniname") == NULL && (strstr(args[2], "report") != NULL || strstr(args[2], "project") != NULL)) {
         strcat(variables, "\\newcommand{\\uniname}{<university name>}\n");
     }
+    if (strstr(variables, "\\picturename") == NULL) {
+        strcat(variables, "\\newcommand{\\picturename}{example.png}\n");
+    }
     // check which template is chosen
     if (strstr(args[2], "exercise") != NULL) {
         if (copyFileContents("../resources/templates/exercise.tex", file) == FAILURE) {
@@ -178,6 +181,10 @@ int checkLatexArgs(char* arg) {
         strcat(variables, "}\n");
     } else if (strstr(extractedArg, "university") != NULL || strstr(extractedArg, "uni") != NULL) {
         strcat(variables, "\\newcommand{\\uniname}{");
+        strcat(variables, extractedInput);
+        strcat(variables, "}\n");
+    } else if (strstr(extractedArg, "picture") != NULL || strstr(extractedArg, "pic") != NULL) {
+        strcat(variables, "\\newcommand{\\picturename}{");
         strcat(variables, extractedInput);
         strcat(variables, "}\n");
     } else {
