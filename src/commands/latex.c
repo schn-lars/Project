@@ -4,6 +4,7 @@
 
 char* variables;
 char* exNumb;
+char* pathToCheck;
 
 int latex(char **args) {
     if (args[1] == NULL || args[2] == NULL) { // args[1] path/filename // args[2] = tempalte type
@@ -14,8 +15,7 @@ int latex(char **args) {
     variables = calloc(sizeof(char), 1024);
     exNumb = calloc(sizeof(char), 128);
     int ind = 3; // from here there could be arguments
-    setupLatexArg(args, ind);
-    char* pathToCheck = calloc( 1024, sizeof(char));
+    pathToCheck = calloc( 1024, sizeof(char));
     char *suffix = ".tex";
     strcpy(pathToCheck, args[1]);
     if (strstr(pathToCheck, "'") != NULL || strchr(pathToCheck, '"') != NULL) { // check if file has "" or '' and remove them
@@ -44,6 +44,7 @@ int latex(char **args) {
         free(exNumb);
         return FAILURE;
     }
+    setupLatexArg(args, ind);
     char* filename = calloc(sizeof(char), 128);
     if (strstr(args[2], "exercise") != NULL) {
         strcat(filename, "exercise");
@@ -290,9 +291,31 @@ int checkLatexArgs(char* arg) {
         strcat(variables, extractedInput);
         strcat(variables, "}\n");
     } else if (strstr(extractedArg, "picture") != NULL || strstr(extractedArg, "pic") != NULL) {
-        strcat(variables, "\\newcommand{\\picturename}{");
-        strcat(variables, extractedInput);
-        strcat(variables, "}\n");
+        char *filename;
+        if (isImageFile(extractedInput) == 0) {
+            printf("%s is not a valid picture and gets ignored.\n", extractedInput);
+        } else {
+            char* picPath = calloc(sizeof(char), 1024);
+            const char *lastSlash = strrchr(extractedInput, '/');
+            if (lastSlash == NULL) {
+                // there was no '/' which means the path is the filename
+                filename = strdup(extractedInput);
+            } else {
+                // the name starts after the '/'
+                filename = strdup(lastSlash + 1);
+            }
+            strcpy(picPath, pathToCheck);
+            strcat(picPath, "/");
+            strcat(picPath, filename);
+            if (strstr(filename, ".") == NULL) {
+                strcat(picPath, ".png");
+            }
+            copyFile(extractedInput, picPath);
+            strcat(variables, "\\newcommand{\\picturename}{");
+            strcat(variables, filename);
+            strcat(variables, "}\n");
+            free(picPath);
+        }
     } else {
         printf("%s is not a valid argument and gets ignored.\n", arg);
     }
