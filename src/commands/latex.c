@@ -52,6 +52,8 @@ int latex(char **args) {
         }
     } else if (strstr(args[2], "project") != NULL || strstr(args[2], "report") != NULL){
         strcat(filename, "project_report");
+    } else if (strstr(args[2], "CV") != NULL || strstr(args[2], "cv") != NULL){
+        strcat(filename, "CV");
     }
     strcat(filename, suffix);
     char* filePath = calloc(sizeof(char), 1024);
@@ -70,9 +72,9 @@ int latex(char **args) {
     }
     //checking variables for missing inputs and filling in with default values
     if (strstr(variables, "\\author") == NULL) {
-        strcat(variables, "\\newcommand{\\authorname}{<author>}\n");
+        strcat(variables, "\\newcommand{\\authorname}{<name surname>}\n");
     }
-    if (strstr(variables, "\\course") == NULL) {
+    if (strstr(variables, "\\course") == NULL && (strstr(args[2], "exercise") != NULL || (strstr(args[2], "report") != NULL || strstr(args[2], "project") != NULL))) {
         strcat(variables, "\\newcommand{\\course}{<course>}\n");
     }
     if (strstr(variables, "\\homeworkNumber") == NULL && strstr(args[2], "exercise") != NULL) {
@@ -90,6 +92,9 @@ int latex(char **args) {
     if (strstr(variables, "\\picturename") == NULL) {
         strcat(variables, "\\newcommand{\\picturename}{example.png}\n");
     }
+    if (strstr(variables, "\\tempColor") == NULL) {
+        strcat(variables, "\\newcommand{\\tempColor}{blue}\n");
+    }
     // check which template is chosen
     if (strstr(args[2], "exercise") != NULL) {
         if (copyFileContents("../resources/templates/exercise.tex", file) == FAILURE) {
@@ -103,6 +108,16 @@ int latex(char **args) {
         }
     } else if (strstr(args[2], "report") != NULL || strstr(args[2], "project") != NULL) {
         if (copyFileContents("../resources/templates/project-report.tex", file) == FAILURE) {
+            fclose(file);
+            free(pathToCheck);
+            free(variables);
+            free(filename);
+            free(filePath);
+            free(exNumb);
+            return FAILURE;
+        }
+    } else if (strstr(args[2], "CV") != NULL || strstr(args[2], "cv") != NULL) {
+        if (copyFileContents("../resources/templates/CV.tex", file) == FAILURE) {
             fclose(file);
             free(pathToCheck);
             free(variables);
@@ -170,7 +185,6 @@ int copyFile(const char *sourcePath, const char *destPath) {
 
     char buffer[BUFFER_SIZE];
     size_t bytesRead;
-    printf("Before while.\n");
     while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, sourceFile)) > 0) { // writes Bytes for Bytes to buffer
         if (fwrite(buffer, 1, bytesRead, destFile) != bytesRead) {
             perror("ERROR - could not write to destfile\n");
@@ -179,7 +193,6 @@ int copyFile(const char *sourcePath, const char *destPath) {
             return 1;
         }
     }
-    printf("After while.\n");
 
     if (ferror(sourceFile)) {
         perror("ERROR- could not read from sourcefile\n");
@@ -187,8 +200,6 @@ int copyFile(const char *sourcePath, const char *destPath) {
 
     fclose(sourceFile);
     fclose(destFile);
-
-    printf("Datei erfolgreich kopiert von %s nach %s\n", sourcePath, destPath);
     return 0;
 }
 
@@ -289,6 +300,14 @@ int checkLatexArgs(char* arg) {
         strcat(variables, "\\newcommand{\\uniname}{");
         strcat(variables, extractedInput);
         strcat(variables, "}\n");
+    } else if (strstr(extractedArg, "color") != NULL || strstr(extractedArg, "colour") != NULL) {
+        if (strcmp(extractedInput, "blue") == 0 || strcmp(extractedInput, "orange") == 0 || strcmp(extractedInput, "red") == 0 || strcmp(extractedInput, "green") == 0 || strcmp(extractedInput, "purple") == 0 || strcmp(extractedInput, "grey") == 0) {
+            strcat(variables, "\\newcommand{\\tempColor}{");
+            strcat(variables, extractedInput);
+            strcat(variables, "}\n");
+        } else {
+            printf("Sorry but %s is not one of the possible colors. This argument gets ignored.", extractedInput);
+        }
     } else if (strstr(extractedArg, "picture") != NULL || strstr(extractedArg, "pic") != NULL) {
         char *filename;
         if (isImageFile(extractedInput) == 0) {
