@@ -11,7 +11,6 @@ int latex(char **args) {
         warn("Missing data. Usage latex <Path/filename> <template type>");
         return FAILURE;
     }
-    // TODO: check if .somethingelse bc thats wrong file
     variables = calloc(sizeof(char), 1024);
     exNumb = calloc(sizeof(char), 128);
     int ind = 3; // from here there could be arguments
