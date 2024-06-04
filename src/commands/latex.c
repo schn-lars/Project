@@ -11,20 +11,36 @@ int latex(char **args) {
         warn("Missing data. Usage latex <Path/filename> <template type>");
         return FAILURE;
     }
-    variables = calloc(sizeof(char), 1024);
-    exNumb = calloc(sizeof(char), 128);
-    int ind = 3; // from here there could be arguments
-    pathToCheck = calloc( 1024, sizeof(char));
+    variables = calloc(1024, sizeof(char));
+    exNumb = calloc(128, sizeof(char));
+    pathToCheck = calloc(1024, sizeof(char));
+
+    if (variables == NULL || exNumb == NULL || pathToCheck == NULL) {
+        warn("Memory allocation failed.");
+        free(variables);
+        free(exNumb);
+        free(pathToCheck);
+        return FAILURE;
+    }
+
     char *suffix = ".tex";
     strcpy(pathToCheck, args[1]);
     if (strstr(pathToCheck, "'") != NULL || strchr(pathToCheck, '"') != NULL) { // check if file has "" or '' and remove them
         char *newToCheck = removeQuotes(pathToCheck);
         strcpy(pathToCheck, newToCheck);
+        free(newToCheck);
     }
 
     if (checkFile(pathToCheck)) { // if there is already a file with this name, add (i)
         int i= 0;
         char* numb = calloc(100, sizeof(char));
+        if (numb == NULL) {
+            warn("Memory allocation failed.");
+            free(variables);
+            free(exNumb);
+            free(pathToCheck);
+            return FAILURE;
+        }
         while(checkFile(pathToCheck) != 0) {
             char *token = strtok(pathToCheck, "(");
             if (token != NULL) {
@@ -36,15 +52,25 @@ int latex(char **args) {
         free(numb);
     }
     // now pathToCheck contains the next free filename that can be given
-    printf("I created a directory for you: %s\n", pathToCheck);
     if (mkdir(pathToCheck, 0755) != 0) {
         printf("I couldn't create this directory for you.\n");
         free(variables);
         free(exNumb);
+        free(pathToCheck);
         return FAILURE;
     }
+    printf("I created a LaTeX directory for you: %s\n", pathToCheck);
+
+    int ind = 3; // from here there could be arguments
     setupLatexArg(args, ind);
-    char* filename = calloc(sizeof(char), 128);
+    char* filename = calloc(sizeof(char), 1024);
+    if (filename == NULL) {
+        warn("Memory allocation failed.");
+        free(pathToCheck);
+        free(variables);
+        free(exNumb);
+        return FAILURE;
+    }
     if (strstr(args[2], "exercise") != NULL) {
         strcat(filename, "exercise");
         if (exNumb != NULL) { // if there was given an exercise number X, call the file exerciseX
@@ -57,6 +83,14 @@ int latex(char **args) {
     }
     strcat(filename, suffix);
     char* filePath = calloc(sizeof(char), 1024);
+    if (filePath == NULL) {
+        warn("Memory allocation failed.");
+        free(pathToCheck);
+        free(variables);
+        free(filename);
+        free(exNumb);
+        return FAILURE;
+    }
     strcat(filePath, pathToCheck); // create path to actual latex file
     strcat(filePath, "/");
     strcat(filePath, filename);
@@ -127,6 +161,7 @@ int latex(char **args) {
             return FAILURE;
         }
     }
+    fclose(file);
     free(pathToCheck);
     free(variables);
     free(filename);
@@ -161,7 +196,6 @@ int copyFileContents(const char *sourcePath, FILE *destFile) {
         fputc(c, destFile);
     }
     fclose(sourceFile);
-    fclose(destFile);
     return SUCCESS;
 }
 
@@ -244,6 +278,7 @@ int setupLatexArg(char** args, int start) {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
             memcpy(arg, args[i], 128);
             if (checkLatexArgs(arg) == 0) {
+                free(arg);
                 return FAILURE;
             }
             free(arg);

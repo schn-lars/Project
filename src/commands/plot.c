@@ -16,27 +16,61 @@ int plot(char **args) {
         printf("Missing data.\n");
         return FAILURE;
     }
-    title = malloc(sizeof(char) * 512);
     darkmode = 1; // set darkmode on per default
     colorChanged = 0; // if the color was changed with an argument
     titleSet = 0; // if the title was set with an argument
-    function = malloc(sizeof(char) * 512);
-    memset(function, 0, 512);
-    flags = malloc(sizeof(char) * 100);
-    memset(flags, 0, 100);
-    command = malloc(sizeof(char) * 1024); // maybe needs more space for longer commands
-    memset(command, 0, 1024);
-    arguments = malloc(sizeof(char) * 1024);
-    memset(arguments, 0, 1024);
-    memcpy(flags, args[1], 100);
+    // Allocate memory and check for NULL pointers
+    title = calloc(512, sizeof(char));
+    if (!title) {
+        printf("Memory allocation failed for title.\n");
+        return FAILURE;
+    }
+
+    function = calloc(512, sizeof(char));
+    if (!function) {
+        printf("Memory allocation failed for function.\n");
+        free(title);
+        return FAILURE;
+    }
+
+    flags = calloc(128, sizeof(char)); // Adjusted size for safety
+    if (!flags) {
+        printf("Memory allocation failed for flags.\n");
+        free(function);
+        free(title);
+        return FAILURE;
+    }
+
+    command = calloc(2048, sizeof(char)); // Increased size for longer commands
+    if (!command) {
+        printf("Memory allocation failed for command.\n");
+        free(flags);
+        free(function);
+        free(title);
+        return FAILURE;
+    }
+
+    arguments = calloc(2048, sizeof(char));
+    if (!arguments) {
+        printf("Memory allocation failed for arguments.\n");
+        free(command);
+        free(flags);
+        free(function);
+        free(title);
+        return FAILURE;
+    }
+    strncpy(flags, args[1], 128);
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
-        memcpy(function, args[1], 512);
+        strncpy(function, args[1], 512);
+        function[513] = '\0';
         if (checkFunction() == 0) {
+            freeMemory();
             return FAILURE;
         }
         int start = 2;
         if (setupArg(args,start) == 0) {
+            freeMemory();
             return FAILURE;
         }
         // set Default settings
@@ -47,14 +81,18 @@ int plot(char **args) {
     } else {
         if (args[2] == NULL) {
             printf("Missing data.\n");
+            freeMemory();
             return FAILURE;
         }
-        memcpy(function, args[2], 512); // take first arg that's not a flag and save it in function
+        strncpy(function, args[2], 512); // take first arg that's not a flag and save it in function
+        function[513] = '\0';
         if (checkFunction() == 0) {
+            freeMemory();
             return FAILURE;
         }
         int start = 3;
         if (setupArg(args,start) == 0) {
+            freeMemory();
             return FAILURE;
         }
         if (flags != NULL) {
@@ -78,6 +116,7 @@ int plot(char **args) {
     FILE *gnuplotPipe = popen("gnuplot -persist", "w");
     if (!gnuplotPipe) {
         printf("Error opening Gnuplot.\n");
+        freeMemory();
         return FAILURE;
     }
     strcat(command, newLine);
@@ -122,11 +161,7 @@ int plot(char **args) {
     pclose(gnuplotPipe);
 
     // Free everything
-    free(function);
-    free(flags);
-    free(command);
-    free(arguments);
-    free(title);
+    freeMemory();
     return SUCCESS;
 }
 
@@ -177,7 +212,7 @@ int checkFunction() {
         strcpy(functionCommand, "plot '");
         strcat(functionCommand, function);
         strcat(functionCommand, quot);
-        strcat(command, functionCommand);
+        strncpy(command, functionCommand, 513);
         //sprintf(command, "plot '%s' \n", function);
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
@@ -188,10 +223,9 @@ int checkFunction() {
             strcat(functionCommand, function);
             strcat(command, functionCommand);
             //sprintf(command, "plot %s \n", function);
-            free(functionToCheck);
         } else {
             printf("Path does not exist.\n");
-            free(functionToCheck);
+            free(functionCommand);
             return FAILURE;
         }
 
@@ -204,8 +238,10 @@ int checkFunction() {
         //sprintf(command, "plot %s \n", function);
     } else {
         printf("file or function does not exist\n");
+        free(functionCommand);
         return FAILURE;
     }
+    free(functionCommand);
     return 1;
 }
 
@@ -254,8 +290,9 @@ int setupArg(char** args, int start) {
             printf("%s is not a valid argument and gets ignored.\n", args[i]);
         } else {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-            memcpy(arg, args[i], 65);
+            memcpy(arg, args[i], MAX_ARG_LENGTH);
             if (checkArgs(arg) == 0) {
+                free(arg);
                 return FAILURE;
             }
             free(arg);
@@ -347,4 +384,27 @@ int checkArgs(char* arg) {
     }
     free(extractedArg);
     return 1;
+}
+
+void freeMemory() {
+    if (function) {
+        free(function);
+        function = NULL;  // Avoid double free
+    }
+    if (flags) {
+        free(flags);
+        flags = NULL;  // Avoid double free
+    }
+    if (command) {
+        free(command);
+        command = NULL;  // Avoid double free
+    }
+    if (arguments) {
+        free(arguments);
+        arguments = NULL;  // Avoid double free
+    }
+    if (title) {
+        free(title);
+        title = NULL;  // Avoid double free
+    }
 }

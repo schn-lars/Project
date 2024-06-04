@@ -41,5 +41,6 @@ int checkFunction();
 char* removeQuotes(char* str);
 int checkArgs(char* arg);
 int setupArg(char** args, int start);
+void freeMemory();
 
 #endif
