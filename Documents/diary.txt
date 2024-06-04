@@ -150,6 +150,33 @@ Saturday 18.05.2024: Lars
 I implemented the system command 'echo' and added some flags to it to modify the looks of the output. Now you can add
 background color, font color and some styles.
 
+Monday 20.05.2024: Mirco
+Added the latex command that should create a new .tex file with a given template. This template can be used for your LaTeX code in any LateX programm (e.g. Overleaf).
+Until now there are two templates "exercise" & "project-report". They are saved in the /resources/templates directory.
+Exercise: is a template for a homework sheet.
+Project-report: is a template for a project report. Here our own report for DAVIS was the inspiration.
+
 Tuesday, 21.05.2024: Lars
 I managed to add the possibility to use the arrow keys to traverse history commands. Moreover added documentation of methods I implemented.
 I am finalizing my work, as I mostly finished my report as well.
+
+Tuesday 21.05.2024: Mirco
+Changed the argument in plot.c, so it doesn't fail anymore but just ignores wrong input arguments.
+in latex.c I implemeted the argument setups and tried to copy the template contents to a new file.
+Now the latex command can take in arguments that should be put into the templates.
+
+Wednesday 22.05.2024: Mirco
+Added a new method that removes "_" from a string because for the latex.c arguments you have to write an underline instead for a space.
+This is needed so the arguments can be placed right into the templates.
+Added the new argument picture where you can give a path to a picture that will be put into the example picture in the templates.
+For that I need the method copyFile() which copies the Bytes of a picture to another new file.
+IsImageFile() checks if the given path is a valid picture file (png or jpeg).
+I had to rewrite latex.c a bit so the outcome is not just a .tex file but a new directory with the .tex file in it and if a picture is given the picture.
+
+Friday 24.05.2024: Mirco
+Implemented that it copies the picture into the newly created directory.
+I created a new template for a simple CV.
+
+Saturday 25.05.2024: Mirco
+Rewrote the latxe.h header with all arguments and also added some commands.
+Started to check plot.c and latex.c for memory leaks and added some new checks.
