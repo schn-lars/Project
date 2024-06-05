@@ -32,6 +32,7 @@
 #ifndef PLOT_H
 #define PLOT_H
 #include "../davis.h"
+#include "./latex.h"
 
 
 int plot(char **args);
@@ -42,5 +43,6 @@ char* removeQuotes(char* str);
 int checkArgs(char* arg);
 int setupArg(char** args, int start);
 void freeMemory();
+char* removeUnderlines(char* input);
 
 #endif

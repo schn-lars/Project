@@ -153,6 +153,7 @@ int plot(char **args) {
         strcat(savecommand, "'\nreplot\n");
         fprintf(gnuplotPipe, "%s", savecommand);
         fflush(gnuplotPipe);
+
         free(numb);
         free(savecommand);
         free(nameToCheck);
@@ -319,6 +320,9 @@ int checkArgs(char* arg) {
         return 0;
     }
     char* extractedInput = &arg[i];
+    if (strstr(extractedInput, "_") != NULL) {
+        removeUnderlines(extractedInput);
+    }
     // now the input for the title should be saved in extractedInput
 
     if (strstr(extractedArg, "title") != NULL || strstr(extractedArg, "tit") != NULL) {
