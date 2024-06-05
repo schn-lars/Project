@@ -10,6 +10,7 @@
  *      -d → disables darkmode
  *      -s → saves graph as png directly. The file name is per default "DAVIS_plot" or the title if one is set (duplicates get incremented numbers added)
  *  Possible arguments (most arguments work with their short form SF or alternativ form AF):
+ *  !Write "_" instead of a space. This will be automatically changed back for you in the plot!
  *      title:<title> → sets the title of the graph (SF tit)
  *      xlabel:<xlabel> → sets the horizontal xlabel (SF xl)
  *      ylabel:<ylabel> → sets the vertical ylabel (SF yl)
