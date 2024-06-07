@@ -150,6 +150,10 @@ void get_input() {
                 }
             }
         } else if (c >= 32 && c <= 126) { // Printable characters
+            if (index >= MAX_INPUT_BUFFER - 1) {
+                input[MAX_INPUT_BUFFER - 1] = '\0';
+                break;
+            }
             input[index++] = c;
             putchar(c);
             fflush(stdout);

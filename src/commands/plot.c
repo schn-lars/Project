@@ -16,6 +16,7 @@ int plot(char **args) {
         printf("Missing data.\n");
         return FAILURE;
     }
+    printf("plot start");
     darkmode = 1; // set darkmode on per default
     colorChanged = 0; // if the color was changed with an argument
     titleSet = 0; // if the title was set with an argument
@@ -62,8 +63,9 @@ int plot(char **args) {
     strncpy(flags, args[1], 128);
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
+        LOGGER("no flags", "start");
         strncpy(function, args[1], 512);
-        function[513] = '\0';
+        function[511] = '\0';
         if (checkFunction() == 0) {
             freeMemory();
             return FAILURE;
@@ -85,7 +87,7 @@ int plot(char **args) {
             return FAILURE;
         }
         strncpy(function, args[2], 512); // take first arg that's not a flag and save it in function
-        function[513] = '\0';
+        function[511] = '\0';
         if (checkFunction() == 0) {
             freeMemory();
             return FAILURE;
@@ -167,6 +169,7 @@ int plot(char **args) {
 }
 
 int checkFlags() {
+    LOGGER("checkFlags", "start");
     if (strstr(flags, "b") != NULL) { // removes top and right border of graph
         char border[100] = "set border 3\nset tics nomirror\nset border lw 1.5\n";
         strcat(arguments, border);
@@ -180,7 +183,7 @@ int checkFlags() {
     }
     if (strstr(flags, "e") != NULL) { // adds errorbars
         //TODO: check if file has 3 columns
-        if (strstr(flags, "l") != NULL) {
+        if (strstr(flags, "l") != NULL || strstr(flags, "p") == NULL) {
             char eBars[100] = " with errorlines ";
             strcat(command, eBars);
         } else if (strstr(flags, "p") != NULL) {
@@ -201,10 +204,12 @@ int checkFlags() {
     if (strstr(flags, "d") != NULL) { // disables darkmode
         darkmode = 0;
     }
+    LOGGER("checkFlags", "end");
     return 1;
 }
 
 int checkFunction() {
+    LOGGER("checkFunction", "start");
     // Check if file exists or if direct function like sin(X)
     char* functionCommand = malloc(sizeof(char) * 513);
     memset(functionCommand, 0, 513);
@@ -214,7 +219,6 @@ int checkFunction() {
         strcat(functionCommand, function);
         strcat(functionCommand, quot);
         strncpy(command, functionCommand, 513);
-        //sprintf(command, "plot '%s' \n", function);
     }
     else if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) // input is a path/file -> add it to command as is
     {
@@ -223,7 +227,6 @@ int checkFunction() {
             strcpy(functionCommand, "plot ");
             strcat(functionCommand, function);
             strcat(command, functionCommand);
-            //sprintf(command, "plot %s \n", function);
         } else {
             printf("Path does not exist.\n");
             free(functionCommand);
@@ -236,13 +239,13 @@ int checkFunction() {
         strcpy(functionCommand, "plot ");
         strcat(functionCommand, function);
         strcat(command, functionCommand);
-        //sprintf(command, "plot %s \n", function);
     } else {
         printf("file or function does not exist\n");
         free(functionCommand);
         return FAILURE;
     }
     free(functionCommand);
+    LOGGER("checkFunction", "end");
     return 1;
 }
 
@@ -284,21 +287,28 @@ int checkFile(const char *path)
 }
 
 int setupArg(char** args, int start) {
+    LOGGER("setupArgs", "start");
     int i;
     for (i = start; args[i] != NULL; i++) { // go over rest of arguments if existing
+        printf("for-loop %d and args: %s\n", i, args[i]);
         // add effect of argument to command
         if (strstr(args[i], ":") == NULL) {
             printf("%s is not a valid argument and gets ignored.\n", args[i]);
         } else {
             char* arg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-            memcpy(arg, args[i], MAX_ARG_LENGTH);
+            memcpy(arg, args[i], MAX_ARG_LENGTH + 1);
+            arg[MAX_ARG_LENGTH] = '\0';
+            LOGGER("setupArgs","nach memcpy");
             if (checkArgs(arg) == 0) {
                 free(arg);
                 return FAILURE;
             }
+            printf("Before freeing arg in setupArg\n");
             free(arg);
+            printf("Freed arg in setupArg\n");
         }
     }
+    LOGGER("setupArgs", "end");
     return 1;
 }
 
@@ -307,19 +317,29 @@ int checkArgs(char* arg) {
         printf("no argument");
         return 0;
     }
-
+    LOGGER("checkArgs", "start");
+    LOGGER("checkArgs", arg);
     int i;
-    char* extractedArg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
-    for (i = 0; arg[i] != ':'; i++) { // goes over argument until input comes
-        extractedArg[i] = arg[i];
+    //char* extractedArg = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    //char* extractedInput = malloc(sizeof(char) * (MAX_ARG_LENGTH + 1));
+    char* extractedArg;
+    char* extractedInput;
+    char* token = strtok(arg, ":");
+    if (token != NULL) {
+        extractedArg = token;
+        token = strtok(NULL, ":");
+        if (token != NULL) {
+            extractedInput = token;  // Second part after the colon
+        } else {
+            extractedInput = NULL;  // No second part found
+            printf("%s is not a valid argument and gets ignored.\n", arg);
+        }
+    } else {
+        extractedArg = NULL;  // No colon found, so no first part
+        extractedInput = NULL;
+        printf("%s is not a valid argument and gets ignored.\n", arg);
     }
-    i++;
-    extractedArg[i] = '\0';
-    if (&arg[i] == NULL) {
-        free(extractedArg);
-        return 0;
-    }
-    char* extractedInput = &arg[i];
+
     if (strstr(extractedInput, "_") != NULL) {
         removeUnderlines(extractedInput);
     }
@@ -386,7 +406,9 @@ int checkArgs(char* arg) {
     } else {
         printf("%s is not a valid argument and gets ignored.\n", arg);
     }
-    free(extractedArg);
+    //free(extractedArg);
+    //free(extractedInput);
+    LOGGER("checkArgs", "end");
     return 1;
 }
 

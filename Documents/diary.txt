@@ -180,3 +180,8 @@ I created a new template for a simple CV.
 Saturday 25.05.2024: Mirco
 Rewrote the latxe.h header with all arguments and also added some commands.
 Started to check plot.c and latex.c for memory leaks and added some new checks.
+
+Wednesday 05.06.2024: Mirco
+I started to stress test the plot command with big files. For that I created a method that writes n rows of data (here I choose the function x^3).
+First I tested it for 20'000 rows then for 100'000'000, what was too much. I tried it again for 50'000'000 and 75'000'000 rows (that are ca. 2.7GB). Both worked.
+I wanted to test longer inputs, but I got a stack smashing error and started debugging. I did not find any solution, but I have to write for the report now.
