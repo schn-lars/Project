@@ -16,7 +16,7 @@ int plot(char **args) {
         printf("Missing data.\n");
         return FAILURE;
     }
-    printf("plot start");
+    LOGGER("plot", "start");
     darkmode = 1; // set darkmode on per default
     colorChanged = 0; // if the color was changed with an argument
     titleSet = 0; // if the title was set with an argument
@@ -27,7 +27,7 @@ int plot(char **args) {
         return FAILURE;
     }
 
-    function = calloc(512, sizeof(char));
+    function = calloc(FUNC_SIZE, sizeof(char));
     if (!function) {
         printf("Memory allocation failed for function.\n");
         free(title);
@@ -64,8 +64,8 @@ int plot(char **args) {
 
     if (args[1][0] != '-') { // no "-" found -> no flags / input directly at args[1]
         LOGGER("no flags", "start");
-        strncpy(function, args[1], 512);
-        function[511] = '\0';
+        strncpy(function, args[1], FUNC_SIZE);
+        function[FUNC_SIZE - 1] = '\0';
         if (checkFunction() == 0) {
             freeMemory();
             return FAILURE;
@@ -86,8 +86,8 @@ int plot(char **args) {
             freeMemory();
             return FAILURE;
         }
-        strncpy(function, args[2], 512); // take first arg that's not a flag and save it in function
-        function[511] = '\0';
+        strncpy(function, args[2], FUNC_SIZE); // take first arg that's not a flag and save it in function
+        function[FUNC_SIZE - 1] = '\0';
         if (checkFunction() == 0) {
             freeMemory();
             return FAILURE;
@@ -122,6 +122,7 @@ int plot(char **args) {
         return FAILURE;
     }
     strcat(command, newLine);
+    LOGGER("plot command: ", command);
     if (arguments != NULL) {
         fprintf(gnuplotPipe, "%s", arguments);
     }
@@ -190,14 +191,13 @@ int checkFlags() {
             char eBars[100] = " with errorbars ";
             strcat(command, eBars);
         }
-    }
-    if (strstr(flags, "p") != NULL && strstr(flags, "l") == NULL && strstr(flags, "e") == NULL) { // graph with lines
+    } else if (strstr(flags, "p") != NULL && strstr(flags, "l") == NULL) { // graph with lines
         char points[100] = " w p";
         strcat(command, points);
-    } else if (strstr(flags, "l") != NULL && strstr(flags, "p") != NULL && strstr(flags, "e") == NULL) { // with points and lines
+    } else if (strstr(flags, "l") != NULL && strstr(flags, "p") != NULL) { // with points and lines
         char linepoints[100] = " w lp ";
         strcat(command, linepoints);
-    } else if (strstr(flags, "l") != NULL && strstr(flags, "e") == NULL || strstr(flags, "p") == NULL){ // per default with lines
+    } else if (strstr(flags, "l") != NULL && strstr(flags, "p") == NULL){ // per default with lines
         char lines[100] = " w l ";
         strcat(command, lines);
     }
@@ -213,6 +213,9 @@ int checkFunction() {
     // Check if file exists or if direct function like sin(X)
     char* functionCommand = malloc(sizeof(char) * 513);
     memset(functionCommand, 0, 513);
+    if (strstr(function, ".csv") != NULL) {
+        convertCSV(function);
+    }
     if (checkFile(function)) // file exists -> add it to command with '' around for gnuplot
     {
         strcpy(functionCommand, "plot '");
@@ -410,6 +413,54 @@ int checkArgs(char* arg) {
     //free(extractedInput);
     LOGGER("checkArgs", "end");
     return 1;
+}
+
+void convertCSV(const char *csvFile) {
+    if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) {
+        char* newFunction = removeQuotes(function);
+        strncpy(function, newFunction, FUNC_SIZE);
+        function[FUNC_SIZE - 1] = '\0';
+    }
+    FILE *csv = fopen(csvFile, "r");
+    if (csv == NULL) {
+        printf("Could not open CSV file %s for reading.\n", csvFile);
+        return;
+    }
+    // Get the home directory from the environment variables
+    const char *homeDir = getenv("HOME");
+    if (homeDir == NULL) {
+        printf("Could not find the HOME environment variable.\n");
+        fclose(csv);
+        return;
+    }
+
+    // Construct the full path to the desktop
+    char txtFile[FUNC_SIZE];
+    snprintf(txtFile, sizeof(txtFile), "%s/Desktop/%s", homeDir, "DAVIS_file");
+    FILE *txt = fopen(txtFile, "w+");
+    if (txt == NULL) {
+        printf("Could not open TXT file %s for writing.\n", function);
+        fclose(csv);
+        return;
+    }
+
+    char line[1024];
+    while (fgets(line, sizeof(line), csv) != NULL) {
+        // Replace commas with tabs
+        for (char *ptr = line; *ptr != '\0'; ptr++) {
+            if (*ptr == ',') {
+                *ptr = '\t';
+            }
+        }
+        fputs(line, txt);
+    }
+
+    fclose(csv);
+    fclose(txt);
+    memset(function, 0, FUNC_SIZE);
+    strncpy(function, txtFile, FUNC_SIZE);
+    function[FUNC_SIZE - 1] = '\0';
+    LOGGER("convertCSV function: ", function);
 }
 
 void freeMemory() {

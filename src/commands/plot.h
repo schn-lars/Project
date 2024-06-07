@@ -32,6 +32,7 @@
 #include <string.h>
 #ifndef PLOT_H
 #define PLOT_H
+#define FUNC_SIZE       1024
 #include "../davis.h"
 #include "./latex.h"
 
@@ -45,5 +46,6 @@ int checkArgs(char* arg);
 int setupArg(char** args, int start);
 void freeMemory();
 char* removeUnderlines(char* input);
+void convertCSV(const char *csvFile);
 
 #endif
