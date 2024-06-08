@@ -329,10 +329,18 @@ int checkArgs(char* arg) {
     char* extractedInput;
     char* token = strtok(arg, ":");
     if (token != NULL) {
-        extractedArg = token;
+        extractedArg = strdup(token);
         token = strtok(NULL, ":");
+        printf("exArg1: %s\n", extractedArg);
         if (token != NULL) {
-            extractedInput = token;  // Second part after the colon
+            extractedInput = strdup(token);  // Second part after the colon
+            token = strtok(NULL, ":");
+            printf("exIn1: %s\n", extractedInput);
+            if (token != NULL) { // if xrange:[start:end] is used then there is another token because there are two ":"
+                strcat(extractedInput, ":");
+                strcat(extractedInput, token);
+                printf("exIn2: %s\n", extractedInput);
+            }
         } else {
             extractedInput = NULL;  // No second part found
             printf("%s is not a valid argument and gets ignored.\n", arg);
