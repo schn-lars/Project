@@ -305,7 +305,9 @@ int checkLatexArgs(char* arg) {
         return 0;
     }
     char* extractedInput = &arg[i];
-    removeUnderlines(extractedInput);
+    if (strstr(extractedArg, "pic") == NULL) { // dont remove underlines if arg is picture
+        removeUnderlines(extractedInput);
+    }
     if (strstr(extractedArg, "subtitle") != NULL || strstr(extractedArg, "sub") != NULL) {
         strcat(variables, "\\newcommand{\\subtitlename}{");
         strcat(variables, extractedInput);
