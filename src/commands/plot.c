@@ -11,6 +11,17 @@ int darkmode;
 int titleSet;
 char* title;
 
+
+/**
+ * Plots the data based on the provided arguments.
+ *
+ * This function initializes various settings, parses flags and arguments,
+ * constructs the appropriate gnuplot commands and executes them.
+ * It gets called if you enter the command "plot" to DAVIS
+ *
+ * @param args The command line arguments -> flags + arguments
+ * @return Returns SUCCESS if the plotting is successful, otherwise FAILURE.
+ */
 int plot(char **args) {
     if (args[1] == NULL) {
         printf("Missing data.\n");
@@ -169,6 +180,15 @@ int plot(char **args) {
     return SUCCESS;
 }
 
+/**
+ * Checks and processes the provided flags.
+ *
+ * This function processes the flags provided in the command line arguments
+ * and adjusts the plot settings accordingly.
+ * It adds the right gnuplot commands to the string that gets sent to the gnupipe by plot().
+ *
+ * @return int Always returns 1.
+ */
 int checkFlags() {
     LOGGER("checkFlags", "start");
     if (strstr(flags, "b") != NULL) { // removes top and right border of graph
@@ -208,6 +228,14 @@ int checkFlags() {
     return 1;
 }
 
+/**
+ * Checks the function argument to determine if it's a path to a file or an direct function.
+ *
+ * This function verifies whether the provided function argument is a file or an direct function.
+ * If it's a file, it checks if it exists and prepares the appropriate gnuplot command.
+ *
+ * @return int Returns 1 if the function is valid, otherwise returns FAILURE.
+ */
 int checkFunction() {
     LOGGER("checkFunction", "start");
     // Check if file exists or if direct function like sin(X)
@@ -252,6 +280,16 @@ int checkFunction() {
     return 1;
 }
 
+/**
+ * Removes quotes from a string.
+ *
+ * This function removes all single (') and double (") quotes from the
+ * given string and returns a new string that does not contain these characters.
+ *
+ * @param str The input string from which quotes are to be removed.
+ * @return A new string that contains no quotes. The calling code is
+ *         responsible for freeing the returned memory.
+ */
 char* removeQuotes(char *str) {
     int len = strlen(str);
     int i, j;
@@ -273,9 +311,13 @@ char* removeQuotes(char *str) {
 }
 
 /**
- * Function to check whether a file exists or not using
- * access() function. It returns 1 if file exists at
- * given path otherwise returns 0.
+ * Checks if a file exists.
+ *
+ * This function checks if the given file exists in the filesystem
+ * using access() function.
+ *
+ * @param path The path to the file to check.
+ * @return int Returns 1 if the file exists, otherwise returns 0.
  */
 int checkFile(const char *path)
 {
@@ -289,11 +331,20 @@ int checkFile(const char *path)
     return 1;
 }
 
+/**
+ * Sets up arguments for the gnuplot command.
+ *
+ * This function processes and prepares the arguments for the gnuplot command,
+ * ensuring the correct format and appending them to the command string.
+ *
+ * @param args The command line arguments.
+ * @param start The starting index of the arguments to be processed. 2 if there are no flags and 3 if there are flags.
+ * @return int Returns 1 if successful, otherwise returns 0.
+ */
 int setupArg(char** args, int start) {
     LOGGER("setupArgs", "start");
     int i;
     for (i = start; args[i] != NULL; i++) { // go over rest of arguments if existing
-        printf("for-loop %d and args: %s\n", i, args[i]);
         // add effect of argument to command
         if (strstr(args[i], ":") == NULL) {
             printf("%s is not a valid argument and gets ignored.\n", args[i]);
@@ -306,15 +357,23 @@ int setupArg(char** args, int start) {
                 free(arg);
                 return FAILURE;
             }
-            printf("Before freeing arg in setupArg\n");
             free(arg);
-            printf("Freed arg in setupArg\n");
         }
     }
     LOGGER("setupArgs", "end");
     return 1;
 }
 
+/**
+ * Parses and processes a given argument for plot settings.
+ *
+ * This function takes a single argument string, splits it into a key-value pair
+ * based on a colon (':'), and processes the pair to set various gnuplot settings.
+ * The recognized settings include title, labels, legend positions, ranges, and colors.
+ *
+ * @param arg The argument string to be processed. The format should be "key:value".
+ * @return int Returns 1 if successful, otherwise returns 0 for invalid or null arguments.
+ */
 int checkArgs(char* arg) {
     if (arg == NULL) {
         printf("no argument");
@@ -423,6 +482,14 @@ int checkArgs(char* arg) {
     return 1;
 }
 
+/**
+ * Converts a CSV file to a .txt format suitable for gnuplot.
+ *
+ * This function reads a CSV file, processes its contents, and copies the data
+ * to a .txt file for plotting with gnuplot.
+ *
+ * @param csvFile The path to the CSV file to convert.
+ */
 void convertCSV(const char *csvFile) {
     if (strstr(function, "'") != NULL || strchr(function, '"') != NULL) {
         char* newFunction = removeQuotes(function);
@@ -471,6 +538,11 @@ void convertCSV(const char *csvFile) {
     LOGGER("convertCSV function: ", function);
 }
 
+/**
+ * Frees allocated memory.
+ *
+ * This function frees the dynamically allocated memory used by the program.
+ */
 void freeMemory() {
     if (function) {
         free(function);
