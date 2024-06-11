@@ -145,7 +145,7 @@ int plot(char **args) {
         strcpy(savecommand, "set term pngcairo\nset output '");
         //TODO: add argument for path to save and check here
         strcpy(nameToCheck, "./");
-        if (titleSet != 1 || title == NULL || strstr(title, " ")) { // there is no title, so we name it per Default DAVIS_plot
+        if (titleSet != 1 || title == NULL || strstr(title, " ")) { // there is no title or title has space in it, so we name it per Default DAVIS_plot
             strcpy(title, "DAVIS_plot");
         }
         strcpy(nameToCheck, title);
@@ -163,6 +163,7 @@ int plot(char **args) {
             sprintf(numb,"(%d)", i);
             strcat(title, numb);
         }
+        strcat(title, ".png");
         strcat(savecommand, title);
         strcat(savecommand, "'\nreplot\n");
         fprintf(gnuplotPipe, "%s", savecommand);
@@ -394,11 +395,9 @@ int checkArgs(char* arg) {
         if (token != NULL) {
             extractedInput = strdup(token);  // Second part after the colon
             token = strtok(NULL, ":");
-            printf("exIn1: %s\n", extractedInput);
             if (token != NULL) { // if xrange:[start:end] is used then there is another token because there are two ":"
                 strcat(extractedInput, ":");
                 strcat(extractedInput, token);
-                printf("exIn2: %s\n", extractedInput);
             }
         } else {
             extractedInput = NULL;  // No second part found
