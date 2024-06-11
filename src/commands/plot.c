@@ -146,24 +146,24 @@ int plot(char **args) {
         //TODO: add argument for path to save and check here
         strcpy(nameToCheck, "./");
         if (titleSet != 1 || title == NULL || strstr(title, " ")) { // there is no title or title has space in it, so we name it per Default DAVIS_plot
-            strcpy(title, "DAVIS_plot");
+            strcpy(title, "DAVIS_plot.png");
         }
-        strcpy(nameToCheck, title);
+        if (strstr(title, ".png") == NULL) {
+            strcat(title, ".png");
+        }
         int i= 0;
         char* numb = calloc(100, sizeof(char));
-        while(checkFile(nameToCheck) != 0) {
-            char *token = strtok(nameToCheck, "(");
+        while(checkFile(title) != 0) {
+            title = removeSuffix(title, ".png");
+            char *token = strtok(title, "(");
             if (token != NULL) {
-                strcpy(nameToCheck, token);
+                strcpy(title, token);
             }
             sprintf(numb,"(%d)", ++i);
-            strcat(nameToCheck, numb);
-        }
-        if (i != 0) {
-            sprintf(numb,"(%d)", i);
             strcat(title, numb);
+            strcat(title, ".png");
         }
-        strcat(title, ".png");
+
         strcat(savecommand, title);
         strcat(savecommand, "'\nreplot\n");
         fprintf(gnuplotPipe, "%s", savecommand);
@@ -218,7 +218,7 @@ int checkFlags() {
     } else if (strstr(flags, "l") != NULL && strstr(flags, "p") != NULL) { // with points and lines
         char linepoints[100] = " w lp ";
         strcat(command, linepoints);
-    } else if (strstr(flags, "l") != NULL && strstr(flags, "p") == NULL){ // per default with lines
+    } else if (strstr(flags, "l") != NULL || strstr(flags, "p") == NULL){ // per default with lines
         char lines[100] = " w l ";
         strcat(command, lines);
     }

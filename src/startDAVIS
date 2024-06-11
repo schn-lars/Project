@@ -1,4 +1,0 @@
-echo "To be able to use DAVIS at it's full potential you have to first install gnuplot."
-sudo apt-get install gnuplot
-make
-./DAVIS.o
