@@ -1,5 +1,5 @@
 /*
- * latex <PATH/Filename> <template type> {optional arguments}
+ * latex <path/filename> <template type> {optional arguments}
  * This command creates a LaTeX file and puts it into a folder (at the given PATH) which you can use for example with Overleaf.com to make a PDF.
  * There are three different templates: exercise, project-report and CV.
  * Each template has different contents that have to be replaced.

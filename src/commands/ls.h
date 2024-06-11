@@ -1,5 +1,5 @@
 /*
- *  ls [OPTION], effect varies due to following options:
+ *  ls {optional flag}, effect varies due to following options:
  *      -l => Displays current directory as a list.
  *      -a => Includes invisible files as well.
  *      -r => improved readability
