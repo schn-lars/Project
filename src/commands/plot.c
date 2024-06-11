@@ -93,7 +93,7 @@ int plot(char **args) {
         strcat(arguments, grid);
     } else {
         if (args[2] == NULL) {
-            printf("Missing data.\n");
+            printf("Missing data. Right usage: plot <./PATH/TO/DATA>  {optional flags} {optional arguments}\n");
             freeMemory();
             return FAILURE;
         }
@@ -272,7 +272,7 @@ int checkFunction() {
         strcat(functionCommand, function);
         strcat(command, functionCommand);
     } else {
-        printf("file or function does not exist\n");
+        printf("File or function does not exist\n");
         free(functionCommand);
         return FAILURE;
     }
@@ -391,7 +391,6 @@ int checkArgs(char* arg) {
     if (token != NULL) {
         extractedArg = strdup(token);
         token = strtok(NULL, ":");
-        printf("exArg1: %s\n", extractedArg);
         if (token != NULL) {
             extractedInput = strdup(token);  // Second part after the colon
             token = strtok(NULL, ":");

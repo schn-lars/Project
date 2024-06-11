@@ -53,13 +53,13 @@ int latex(char **args) {
     }
     // now pathToCheck contains the next free filename that can be given
     if (mkdir(pathToCheck, 0755) != 0) {
-        printf("I couldn't create this directory for you.\n");
+        printf("Could not create the directory.\n");
         free(variables);
         free(exNumb);
         free(pathToCheck);
         return FAILURE;
     }
-    printf("I created a LaTeX directory for you: %s\n", pathToCheck);
+    printf("LaTeX directory was created at: %s\n", pathToCheck);
 
     int ind = 3; // from here there could be arguments
     setupLatexArg(args, ind);
@@ -343,7 +343,7 @@ int checkLatexArgs(char* arg) {
             strcat(variables, extractedInput);
             strcat(variables, "}\n");
         } else {
-            printf("Sorry but %s is not one of the possible colors. This argument gets ignored.", extractedInput);
+            printf("%s is not a valid color. This argument gets ignored.", extractedInput);
         }
     } else if (strstr(extractedArg, "picture") != NULL || strstr(extractedArg, "pic") != NULL) {
         char *filename;

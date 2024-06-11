@@ -1,5 +1,5 @@
 /*
- *  plot <~/PATH/TO/DATA>  {optional flags} {optional arguments} -> plots a given input with the GNUplot-library and shows a graph
+ *  plot <./PATH/TO/DATA>  {optional flags} {optional arguments} -> plots a given input with the GNUplot-library and shows a graph
  *  Possible flags are:
  *      -b → removes top and right borders
  *      -g → removes grid
